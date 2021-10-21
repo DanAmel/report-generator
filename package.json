@@ -1,0 +1,23 @@
+{
+  "name": "report-generator",
+  "version": "0.1.0",
+  "description": "Component that generate a report ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No test specified\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DanAmel/report-generator.git"
+  },
+  "keywords": [
+    "report",
+    "generator"
+  ],
+  "author": "Daniel AMELINA <<amelinadaniel@benincontrol.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DanAmel/report-generator/issues"
+  },
+  "homepage": "https://github.com/DanAmel/report-generator#readme"
+}
