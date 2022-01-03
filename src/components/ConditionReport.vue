@@ -181,8 +181,10 @@ export default {
       let operands = []
       switch (type){
         case 'float4':
+        case 'float8':
         case 'numeric':
         case 'int4':
+        case 'int8':
           operands.push({name: 'Différent', code:'not-equal'})
           operands.push({name: 'Egal', code:'equals'},)
           operands.push({name: 'Est null', code:'isNull'})

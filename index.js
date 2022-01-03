@@ -10,7 +10,7 @@ export function install(Vue) {
     Vue.component('Generator', Generator);
 }
 
-// Création du module à destionation Vue.use(...)
+// Création du module à destination Vue.use(...)
 const plugin = {
     install,
 };

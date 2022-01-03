@@ -44,23 +44,23 @@ let f = {
       },
 
       {
-        text: `Campagne:  ${payload.campaign.name} `, fontSize: 10,
+        text: `${payload.campaign_name}`, fontSize: 10,
         width: '*', italics: true,
         alignment: 'left', bold: true,
         margin: [0, 0, 0, 0]
       },
       {
-        text: `Période:  ${payload.start_date} au ${payload.end_date}`, fontSize: 10,
+        text: `Situation  ${payload.periode} `, fontSize: 10,
         width: '*', italics: true,
         alignment: 'left', bold: true,
         margin: [0, 0, 0, 0]
       },
-      {
+      /*{
         text: `Usine : ${payload.production_chain} `, fontSize: 10,
         width: '*', italics: true,
         alignment: 'left', bold: true,
         margin: [0, 0, 0, 0]
-      },
+      },*/
       {
         text: ` `, fontSize: 10,
         width: '*', italics: true,
@@ -92,15 +92,14 @@ let f = {
       margin: [40, 0, 40, 0],
       columns: [
         {
-          text: `${payload.impression_date} / ${payload.campaign.code}`, width: '33%',
+          text: `${payload.impression_date} / `, width: '33%',
           alignment: 'left', italics: true,
         },
 
         {
-          text: `Usine de ${payload.production_chain}`, width: '33%',
+          text: ``, width: '33%',
           alignment: 'center', italics: true,
         },
-
         {
           text: `Powered By Sodeco - #${payload.user_name}`,
           width: '30%', alignment: 'right', italics: true,

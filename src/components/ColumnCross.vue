@@ -2,20 +2,21 @@
 
   <div class="row">
 <!--    <div class="col-2"> Colonne </div>-->
-    <div class="col-4">
+    <div class="col-6">
+
       <q-select  dense outlined class="q-mr-md" clearable
-                 v-model="item.column"
-                 label="Choisir le champ"
-                 :options="availableFilterColumns"
-                 :hide-bottom-space="true"
-                 option-label="name" option-value="code"
-                 :options-dense="true"
-                 use-input input-debounce="0"
-                 @m-blur="validator.newFilter.columns.$each[index].column.$touch"
-                 :error="validator.newFilter.columns.$each[index].column.$error"
-                 error-message="Champ requis."
-                 @filter="filterAvailableColumns"
-                 @input="selectColumn">
+         v-model="item.column"
+         label="Choisir une colonne"
+         :options="availableFilterColumns"
+         :hide-bottom-space="true"
+         option-label="name" option-value="code"
+         :options-dense="true"
+         use-input input-debounce="0"
+         error-message="Champ requis."
+         @m-blur="validator.newFilter.column_cross.$each[index].column.$touch"
+         :error="validator.newFilter.column_cross.$each[index].column.$error"
+         @filter="filterAvailableColumns"
+         @input="selectColumn">
         <template v-slot:no-option>
           <q-item>
             <q-item-section class="text-grey">
@@ -26,21 +27,19 @@
       </q-select>
 
     </div>
-    <div class="col-2 justify-start">
+    <div class="col-3 justify-start">
       <!--                                {{item.column}}-->
-      <q-select  dense outlined class="" clearable
-                 v-model="selectedAgregat"
-                 label="Aggrégat"
-                 :options="getAvailaibleAgregats(item.column)"
-                 :hide-bottom-space="true"
-                 option-label="name" option-value="code"
-                 :options-dense="true"
-                 @input="changeAgregat"
-      > </q-select>
-    </div>
-
-    <div class="col-3">
-      <q-input v-if="item.column" v-model="item.column.alias" class="q-ml-md"  dense label="Alias" />
+<!--      <q-select  dense outlined class="" clearable
+         v-model="selectedAgregat"
+         label="Sous total"
+         :options="getAvailaibleAgregats(item.column)"
+         :hide-bottom-space="true"
+         error-message="Champ requis."
+         @m-blur="validator.newFilter.column_cross.$each[index].aggregat.$touch"
+         :error="validator.newFilter.column_cross.$each[index].aggregat.$error"
+         option-label="name" option-value="code"
+         :options-dense="true"
+         @input="changeAgregat"> </q-select>-->
     </div>
 
     <div class="col-2">
@@ -56,7 +55,7 @@
 import get from "lodash/get";
 
 export default {
-  name: "ColumnReport",
+  name: "ColumnCross",
   props:{
     item: {
       type : [Array, Object]
@@ -85,7 +84,7 @@ export default {
   methods:{
 
     changeAgregat(){
-      this.item.column.aggregat = this.selectedAgregat
+      this.item.aggregat = this.selectedAgregat
     },
 
     deleteColumn(data, index){
@@ -94,6 +93,7 @@ export default {
       }
       this.removeItem(data, index)
     },
+
     removeItem(data, index){
       data.splice(index, 1)
     },
@@ -101,7 +101,7 @@ export default {
     filterAvailableColumns (val, update, abort) {
       update(() => {
         const needle = val.toLowerCase()
-        this.availableFilterColumns = this.availableColumns.filter(v => get(v, 'name', '').toLowerCase().indexOf(needle) > -1)
+        this.availableFilterColumns = this.availableColumns.filter(v => v.name && v.name.toLowerCase().indexOf(needle) > -1)
       })
     },
 
@@ -111,7 +111,6 @@ export default {
       if(this.item.column)
         this.item.column.aggregat = null
     },
-
 
     //GESTION DES AGREGATS
     getAvailaibleAgregats(data){
@@ -124,24 +123,14 @@ export default {
         case 'numeric':
         case 'int4':
         case 'int8':
-          agreg.push({name: 'MIN', code:'min'})
-          agreg.push({name: 'MAX', code:'max'})
-          agreg.push({name: 'NOMBRE', code:'count'})
           agreg.push({name: 'SOMME', code:'sum'})
+          agreg.push({name: 'NOMBRE', code:'count'})
           agreg.push({name: 'MOYENNE', code:'avg'})
-          if(this.index === 0)
-            agreg.push({name: 'DISTINCT', code:'distinct'})
           break
         case 'date':
-          agreg.push({name: 'MIN', code:'min'})
-          agreg.push({name: 'MAX', code:'max'})
-          agreg.push({name: 'NOMBRE', code:'count'})
-          break
         case 'text':
         case 'varchar':
           agreg.push({name: 'NOMBRE', code:'count'})
-          if(this.index === 0)
-            agreg.push({name: 'DISTINCT', code:'distinct'})
           break
       }
 

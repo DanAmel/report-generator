@@ -1,36 +1,60 @@
 <template>
-  <q-page class="bg-white" padding>
-    <div class="row">
-      <div class="col-xs-12 col-sm-12 col-md-8 col-lg-8 text-left ">
-        <h6 v-if="filter" class="q-ma-none"><strong>{{ filter.title }}
-        </strong></h6>
-      </div>
+  <q-page class="flex flex-block">
+    <div class="row full-width">
+      <div class="col-xs-12">
 
-      <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 q-pt-xs">
+        <div class="row no-wrap shadow-1">
+          <q-toolbar class="col-12 bg-grey-e3">
+            <q-toolbar-title class="text-body2">
+              <q-breadcrumbs class="text-subtitle text-weight-medium" active-color="primary"
+                             color="breadcrumb-inactive"
+                             separator="/">
+                <div slot="separator" slot-scope="props" style="font-size: medium">/</div>
+                <q-breadcrumbs-el
+                  class="text-body"
+                  style="font-size: 17px"
+                  icon="fa fa-arrow-circle-left" label="Rapports" :to="returnUrl"/>
+                <q-breadcrumbs-el
+                  class="text-body"
+                  style="font-size: 17px"
+                  :label="filter? filter.title : ''" />
 
-        <div class="col-12 q-pb-xs q-mb-xs">
+              </q-breadcrumbs>
+            </q-toolbar-title>
 
-          <q-btn :label="selectedRange" class="q-ml-sm q-px-md float-right" :color="buttonColorPrimary"
-                 dense icon="fa fa-calendar-alt" unelevated>
-            <q-popup-proxy transition-hide="scale" transition-show="scale" @before-show="updateProxy">
-              <q-date v-model="datesRange" range :color="buttonColorPrimary">
-                <div class="row items-enter  q-gutter-sm">
-                  <q-btn v-close-popup :color="buttonColorSecondary" flat label="Cancel"/>
-                  <q-btn v-close-popup :color="buttonColorPrimary" flat label="OK" @click="getStatsData"/>
-                </div>
-              </q-date>
-            </q-popup-proxy>
-          </q-btn>
+            <ReportForm
+              v-show="true"
+              ref="ReportForm"
+              v-model="filter"
+              :label-filtre-boolean="labelFiltreBoolean"
+              :redirect-url="redirectUrl"
+              :report-list="reportList"
+              :filter-datas="filterDatas"
+              :create-report-api="createReportApi"
+              :update-report-api="updateReportApi"
+              :return-url="updateReportApi"
+              :can-create="canCreate"
+              :can-update="canUpdate"
+              v-on:reloadPage="reloadPage"
+              v-on:showPreview="getStatsData('PDF')"
+              v-on:showNotification="showNotification"
+              v-on:showHideLoading="showHideLoading"
+            />
 
-          <ReportForm
-            v-model="filter"
-            :report-list="reportList"
-            :create-report-api="createReportApi"
-            :update-report-api="updateReportApi"
-            v-on:reloadPage="reloadPage"
-            v-on:showPreview="getStatsData"
-          />
+            <q-btn :label="selectedRange" class="q-ml-sm q-px-md float-right" :color="buttonColorPrimary"
+                   dense icon="fa fa-calendar-alt" unelevated>
+              <q-popup-proxy transition-hide="scale" transition-show="scale" @before-show="updateProxy">
+                <q-date v-model="datesRange" range :color="buttonColorPrimary">
+                  <div class="row items-enter  q-gutter-sm">
+<!--                    <q-btn v-close-popup :color="buttonColorSecondary" flat label="Annuler"/> -->
+                    <q-btn v-close-popup :color="buttonColorPrimary" flat label="PDF" @click="getStatsData('PDF')"/>
+                    <q-btn v-close-popup :color="buttonColorPrimary" flat label="Excel" @click="getStatsData('EXCEL')"/>
+                  </div>
+                </q-date>
+              </q-popup-proxy>
+            </q-btn>
 
+          </q-toolbar>
         </div>
 
       </div>
@@ -44,9 +68,9 @@
       <div class="col-12 q-pb-xs q-pt-xs  q-mt-xs q-mb-xs">
 
         <q-btn
-          color="secondary" class="q-ml-sm"
+          color="green" class="q-ml-sm"
           size="11px"
-          v-if="_isDraft && canValidate"
+          v-if="_isDraft && canValidate && currentId"
           label="Valider" outline
           @click="validate('validated')"
           text-height="11">
@@ -70,7 +94,7 @@
           color="red" class="q-ml-sm"
           size="11px" icon="fa fa-trash"
           label="SUPPRIMER" outline
-          v-if="canDelete"
+          v-if="canDelete && currentId"
           @click="onDelete"
           text-height="11"
         >
@@ -95,10 +119,10 @@
         </q-btn-group>
       </div>
 
-      <div class="col-12 q-my-sm">
+      <div class="col-12 ">
 
         <div slot="content" style="background-color: white; height:1000px" id="iframeContainer">
-          <div class="row items-center justify-center q-pa-sm">
+          <div class="row items-center justify-center ">
           </div>
 
 
@@ -119,13 +143,17 @@
 
 import {mapActions, mapState} from "vuex";
 import get from "lodash/get";
+import assign from "lodash/assign"
 import moment from "moment";
 import pdfMake from 'pdfmake/build/pdfmake'
 import pdfFonts from 'pdfmake/build/vfs_fonts'
 pdfMake.vfs = pdfFonts.pdfMake.vfs
 
 import ReportForm from "./ReportForm";
-import RenderReport from "../render/generator"
+import RenderReport from "../render/render.js"
+import dataGeneretor from "../render/generator"
+import {ExcelConverter} from 'pdfmake-to-excel';
+//import RenderReport from "../render/generator"
 
 
 export default {
@@ -136,10 +164,10 @@ export default {
 
   async preFetch({store, currentRoute, previousRoute, redirect, ssrContext}) {
     let id = this.currentId
-    console.log('this.viewReport', this.viewReportApi)
-    if (id) {
+
+    /*if (id) {
       await store.dispatch(this.viewReportApi, {id})
-    }
+    }*/
   },
   mixins: [],
 
@@ -154,6 +182,14 @@ export default {
       default: false,
     },
     canCancel: {
+      type: Boolean,
+      default: false,
+    },
+    canCreate: {
+      type: Boolean,
+      default: false,
+    },
+    canUpdate: {
       type: Boolean,
       default: false,
     },
@@ -174,8 +210,11 @@ export default {
       default: false,
     },
     otherDatas: {
-      type: Array,
-      default: [],
+      type: Promise,
+    },
+    redirectUrl: {
+      type: String,
+      default: '',
     },
     buttonColorPrimary: {
       type: String,
@@ -209,6 +248,22 @@ export default {
       type: String,
       default: '',
     },
+    getModuleReportApi: {
+      type: String,
+      default: '',
+    },
+    returnUrl: {
+      type: String,
+      default: '',
+    },
+    labelFiltreBoolean: {
+      type: String,
+      default: '',
+    },
+     logo: {
+      type: String,
+      default: '',
+    },
     reportList: {
       type: [Object, Array],
       default: ()=>[],
@@ -217,7 +272,14 @@ export default {
       type: [Object, Array],
       default: ()=>[],
     },
+    filterDatas: {
+      type: Array,
+      default: ()=>[],
+    },
 
+    currentReport: {
+      type: Object,
+    }
   },
 
   data() {
@@ -256,19 +318,26 @@ export default {
     onDateChanged() {
     },
 
-
     updateProxy() {
       this.proxyTime = this.time
     },
 
     get,
 
+    _formatDate(date, format = 'YYYY-MM-DD HH:mm') {
+      //return date ? moment(date).tz(moment.tz.guess()).format(format) : date;
+      return date ? moment(date).format(format) : date;
+    },
+
+    //Fonction qui recharge la page
     async reloadPage(id) {
       await this.$store.dispatch(this.viewReportApi, {id}).then(value => {
         this.filter = this.generateFilter(value)
       })
+
     },
 
+    //Fonction qui génère le filtre au format du composant au format en fonction du
     generateFilter(reportPdf) {
 
       let mFilter = {}
@@ -277,13 +346,20 @@ export default {
       mFilter.dateReport = {}
       mFilter.table = get(reportPdf, 'report_table')
       mFilter.title = get(reportPdf, 'report_title')
+      mFilter.operand_date = get(reportPdf, 'payload_query.operand_date')
       mFilter.columns = get(reportPdf, 'payload_query.columns')
       mFilter.conditions = get(reportPdf, 'payload_query.conditions')
       mFilter.groupBy = get(reportPdf, 'payload_query.groupBy')
       mFilter.orderBy = get(reportPdf, 'payload_query.orderBy')
+      mFilter.column_cross = get(reportPdf, 'payload_query.column_cross')
+      mFilter.line_cross = get(reportPdf, 'payload_query.line_cross')
+      mFilter.value_cross = get(reportPdf, 'payload_query.value_cross')
       mFilter.options = get(reportPdf, 'payload_query.options')
-      mFilter.is_all = get(reportPdf, 'is_all')
+      mFilter.is_all = get(reportPdf, 'payload_query.is_all')
+      mFilter.apply_filter = get(reportPdf, 'payload_query.filterBy') ? true : false
+      mFilter.filterBy = get(reportPdf, 'payload_query.filterBy')
       mFilter.isValid = true
+      mFilter.app_code = get(reportPdf, 'app_code')
       mFilter.options = get(reportPdf, 'payload_query.options')
 
       return mFilter
@@ -292,15 +368,26 @@ export default {
     ...mapActions({
     }),
 
+    //Appel des fonction d'affichage du PDF
     async setupPdf(payload) {
 
       this.loading = true
-      payload.campaign = get(this.currentCampaign, 'code')
-      payload.user_name = get(this.currentUser, 'employee.full_name')
+      payload.campaign = get(this.currentCampaign, 'name')
+      payload.user_name = get(this._currentUser, 'account.employee.full_name')
       payload.production_chain_name = get(this.productionChainUser, 'name')
-      payload.start_date = this.datesRange.from
-      payload.end_date = this.datesRange.to
-      payload.campaign = this.currentCampaign
+      payload.start_date = this.datesRange.from ? moment(this.datesRange.from).format("DD/MM/YYYY") : moment(this.datesRange).format("DD/MM/YYYY")
+      payload.end_date = this.datesRange.to ? moment(this.datesRange.to).format("DD/MM/YYYY") : moment(this.datesRange).format("DD/MM/YYYY")
+
+      payload.periode = this.getLibelleDate(payload.start_date, payload.end_date,  _.get(payload, "filter.operand_date.code", "between"))
+
+
+      //payload.campaign = this.currentCampaign
+
+       let dat =  await this.otherDatas.then(val => val)
+      //console.log("this.otherDatas", dat)
+
+       payload = assign(payload, dat)
+
       let docDefinition = RenderReport(payload)
       const pdfDocGenerator = pdfMake.createPdf(docDefinition)
 
@@ -319,38 +406,87 @@ export default {
 
     },
 
-    getStatsData() {
+    downloadExcelFile(value) {
+     let content = dataGeneretor(value)
+      let contentDefinition = {
+       title: content.title,
+        logo: this.logo,
+        data: get(content, 'table.table.body')
+      }
+      const exporter = new ExcelConverter(contentDefinition.title, contentDefinition);
+      exporter.downloadExcel();
+    },
+
+    showNotification(notification) {
+      this.$emit('showNotification', notification)
+    },
+
+    showHideLoading(show) {
+      this.$emit('showHideLoading', show)
+    },
+
+    //Récupère les données du rapport provenant du backend
+    async getStatsData(type = "PDF") {
       //console.log('this.filter.isValid', this.filter.isValid)
+      this.$refs.ReportForm.change()
       if (!this.filter || !this.filter.isValid) {
-        this.Motify(false, 'Veuillez remplir toutes les données')
+        //this.Motify(false, 'Veuillez remplir toutes les données')
+        this.showNotification({type: false,  message: 'Veuillez remplir toutes les données'})
         return null
       }
+
+      let start_date = this.datesRange.from ? this._formatDate(this.datesRange.from, 'YYYY-MM-DD') : this._formatDate(this.datesRange, 'YYYY-MM-DD')
+      let end_date = this.datesRange.to ?  this._formatDate(this.datesRange.to, 'YYYY-MM-DD') : this._formatDate(this.datesRange, 'YYYY-MM-DD')
+
+
+      if(start_date !== end_date &&  get(this.filter, 'operand_date.code') !== "between"){
+        this.showNotification({type: false,  message: "Changez le type de filtre à Entre ou choissiez une date unique"})
+        return null
+      }
+
       this.loading = true
+
+      //console.log(" get(this.filter, 'app_code')",  get(this.filter, 'app_code'))
       let form = {
-        start_date: this.datesRange.from,
-        end_date: this.datesRange.to,
-        production_chain_id: this.productionChainUser.id,
-        campaign_id: this.currentCampaign.id,
+        start_date: start_date,
+        end_date: end_date,
+
+        //production_chain_id: get(this.productionChainUser, "id"),
+        //campaign_id: this.currentCampaign.id,
         filter: this.filter,
         title: get(this.filter, 'title'),
         table: get(this.filter, 'table'),
-        column_date: get(this.filter, 'column_date')
+        column_date: get(this.filter, 'column_date'),
+        operand_date: get(this.filter, 'operand_date.code', "between"),
+        app_code: get(this.filter, 'app_code', 'SERP'),
+        is_all: get(this.filter, 'is_all', true)
       }
-      //console.log('form', form)
+      let dat =  await this.otherDatas.then(val => val)
+      //console.log("this.otherDatas", dat)
+
+      form = assign(form, dat)
+
       this.$store.dispatch(this.getDataReportApi, form)
         .then(value => {
           //console.log('value', value)
           //console.log('this.statsData', value)
-          this.setupPdf(value)
+          if(type === "PDF")
+            this.setupPdf(value)
+          else
+            this.downloadExcelFile(value)
+
         })
         .catch(err =>{
-          this.Motify('error', 'Une erreur est survenue : Veuillez contactez votre correspondant IT')
+
+          console.error('err', err)
+          this.showNotification({type: false,  message: 'Une erreur est survenue : Veuillez contactez votre correspondant IT'})
         })
         .finally(() => this.loading = false)
 
 
     },
 
+    //Impression du rapport (uniquement pour le mode Electron)
     onPrint() {
 
       /*this.$q.dialog({
@@ -370,7 +506,6 @@ export default {
         }
       })*/
 
-
     },
 
     onDelete() {
@@ -381,12 +516,15 @@ export default {
         cancel: true,
         persistent: false
       }).onOk(async () => {
-        let result =  await this.$store.dispatch(this.deleteReportApi, {id: this.report.id})
+        let result =  await this.$store.dispatch(this.deleteReportApi, {id: this.currentId})
           .then(async (value) => {
-            this.Motify('success', "Le rapport a bien été supprimé", '/generate/reports')
+            //this.Motify('success', "Le rapport a bien été supprimé", '/generate/reports')
+            this.showNotification({type: true,  message: "Le rapport a bien été supprimé",  path: "/apps/statistics/reports-list"})
+
           })
           .catch(error =>{
-            this.Motify('error', "Impossible de supprimer le rapport")
+            //this.Motify('error', "Impossible de supprimer le rapport")
+            this.showNotification({type: false,  message: "Impossible de supprimer le rapport"})
             console.log('error', error)
           })
       })
@@ -399,15 +537,24 @@ export default {
       return {start: startDate, end: endDate};
     },
 
-
     async validate(status) {
-      if (this.report) {
-        await this.$store.dispatch(this.validateReportApi, {id: this.report.id, status: status})
-          .then(async (value) => {
-            //On actualise le rapport
-            await this.$store.dispatch(this.viewReportApi, {id: value.data.id})
-            this.Motify('success', "Opération réussie")
-          })
+      if(this.currentId) {
+
+        this.$q.dialog({
+          title: "Voulez-vous changer le statut",
+          message: 'Voulez-vous changer le statut de ce rapport ?',
+          cancel: true,
+          persistent: false
+        }).onOk(async () => {
+          await this.$store.dispatch(this.validateReportApi, {id: this.currentId, status: status})
+              .then(async (value) => {
+                //On actualise le rapport
+                await this.$store.dispatch(this.viewReportApi, {id: value.data.id})
+                //this.Motify('success', "Opération réussie")
+                this.showNotification({type: true,  message: "Opération réussie", path: null, query: null}, )
+              })
+        })
+
       }
     },
 
@@ -419,24 +566,52 @@ export default {
         var base64data = reader.result;
         resolve(base64data)
       })
+    },
+
+
+    getLibelleDate(start_date, end_date, operand){
+      let libelle = ''
+
+      switch (operand){
+        case 'not-equal':
+          libelle = `différente de ${end_date}`
+          break;
+        case 'gt':
+          libelle = `à date supérieure à ${end_date}`
+          break;
+        case 'lt':
+          libelle = `antérieure à ${end_date}`
+          break;
+        case 'gte':
+          libelle = `à date supérieure ou égale à ${end_date}`
+          break;
+        case 'lte':
+          libelle = `au ${end_date}`
+          break;
+
+        case 'between':
+        default:
+          libelle = `du ${start_date} au ${end_date}`
+          break;
+      }
+      return libelle
+
     }
 
   },
 
   computed: {
 
-
     _isDraft() {
-      return get(this.report, 'status', 'draft') === 'draft'
+      return  this.currentReport && get(this.currentReport, 'status') === 'draft'
     },
 
     _isValidated() {
-     return get(this.report, 'status') === 'validated'
+     return this.currentReport && get(this.currentReport, 'status') === 'validated'
     },
 
     ...mapState({
       productionChainUser: state => get(state, 'productionChainUser.item'),
-      report: state => get(state, 'reports.report'),
       statsData: state => get(state, 'reports.dataReport'),
       currentCampaign: state => get(state, 'campaign.item'),
       currentUser: state => get(state, 'authentification.user'),
@@ -472,15 +647,21 @@ export default {
   },
 
   async mounted() {
-    let dateRange = this.getMonthDateRange(new Date())
-    this.datesRange.from = dateRange.start
-    this.datesRange.to = dateRange.end
+
+    if( get(this.currentReport, "payload_query.operand_date.code", "between") === 'between'){
+      let dateRange = this.getMonthDateRange(new Date())
+      this.datesRange.from = dateRange.start
+      this.datesRange.to = dateRange.end
+    }
+    else{
+      this.datesRange = moment().format("YYYY-MM-DD")
+    }
 
     if (this.pageState === 'view') {
       await this.$store.dispatch(this.viewReportApi, {id: this.currentId}).then(value => {
         this.filter = this.generateFilter(value)
       })
-      this.getStatsData()
+      await this.getStatsData('PDF')
     }
   },
 

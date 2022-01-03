@@ -1,14 +1,6 @@
 <template xmlns:v-slot="http://www.w3.org/1999/XSL/Transform">
     <PageContainer :titles="titles">
       <template slot="header">
-  <!--        <MControlPanel
-            :state="currentState"
-            :can-update="canUpdate"
-            :can-create="canCreate"
-            @on-button1-clicked="onButton1Clicked"
-            @on-button2-clicked="onButton2Clicked"
-            :actions="actions">
-          </MControlPanel>-->
       </template>
 
       <template slot="content">
