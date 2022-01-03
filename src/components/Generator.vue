@@ -153,6 +153,7 @@ import ReportForm from "./ReportForm";
 import RenderReport from "../render/render.js"
 import dataGeneretor from "../render/generator"
 import {ExcelConverter} from 'pdfmake-to-excel';
+import { validationMixin } from 'vuelidate'
 //import RenderReport from "../render/generator"
 
 
@@ -169,7 +170,7 @@ export default {
       await store.dispatch(this.viewReportApi, {id})
     }*/
   },
-  mixins: [],
+  mixins: [validationMixin],
 
   props: {
 
