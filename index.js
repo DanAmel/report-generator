@@ -1,5 +1,6 @@
 // Importation de notre composant Vue
 import Generator from './src/components/Generator.vue';
+import Vuelidate from 'vuelidate';
 
 // Déclaration de la méthode d'installation utilisée via Vue.use(...)
 export function install(Vue) {
@@ -8,6 +9,7 @@ export function install(Vue) {
     install.installed = true;
 
     Vue.component('Generator', Generator);
+    Vue.component('Vuelidate', Vuelidate);
 }
 
 // Création du module à destination Vue.use(...)
