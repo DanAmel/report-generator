@@ -12,6 +12,7 @@
                 <q-card flat  >
                   <template>
                     <ColumnReport
+                      ref="column_report"
                       :item="item"
                       :items="newFilter.columns"
                       :index="index"
@@ -36,6 +37,7 @@
                 <q-card flat  >
                   <template>
                     <ConditionReport
+                      ref="condition_report"
                       :item="item"
                       :items="newFilter.conditions"
                       :index="index"
@@ -60,6 +62,7 @@
                   <template>
 
                     <GroupByReport
+                      ref="group_by_report"
                       :item="item"
                       :items="newFilter.groupBy"
                       :index="index"
@@ -84,6 +87,7 @@
                 <q-card flat >
                   <template>
                     <OrderByReport
+                      ref="order_by_report"
                       :item="item"
                       :items="newFilter.orderBy"
                       :index="index"
@@ -152,16 +156,45 @@ export default {
       //console.log('this.newFilter', this.newFilter)
       switch (type){
         case 'column':
-          this.newFilter.columns.unshift({column: null, aggregat: null, type: null, data: null, sumData: false})
+          //this.newFilter.columns.unshift({column: null, aggregat: null, type: null, data: null, sumData: false})
+          this.newFilter.columns.push({column: null, aggregat: null, type: null, data: null, sumData: false})
+
+          if(this.$refs.column_report){
+            setTimeout(() =>{
+              let index = this.$refs.column_report.length - 1
+              this.$refs.column_report[index].focus()
+            }, 0)
+          }
           break
         case 'condition':
-          this.newFilter.conditions.unshift({condition: null, column: null, operand: null, value:null})
+          //this.newFilter.conditions.unshift({condition: null, column: null, operand: null, value:null})
+          this.newFilter.conditions.push({condition: null, column: null, operand: null, value:null})
+          if(this.$refs.condition_report){
+            setTimeout(() =>{
+              let index = this.$refs.condition_report.length - 1
+              this.$refs.condition_report[index].focus()
+            }, 0)
+          }
           break
         case 'groupBy':
-          this.newFilter.groupBy.unshift({column: null, name: null, sumData: false})
+          //this.newFilter.groupBy.unshift({column: null, name: null, sumData: false})
+          this.newFilter.groupBy.push({column: null, name: null, sumData: false})
+          if(this.$refs.group_by_report){
+            setTimeout(() =>{
+              let index = this.$refs.group_by_report.length - 1
+              this.$refs.group_by_report[index].focus()
+            }, 0)
+          }
           break
         case 'orderBy':
-          this.newFilter.orderBy.unshift({column: null, name: null})
+          //this.newFilter.orderBy.unshift({column: null, name: null})
+          this.newFilter.orderBy.push({column: null, name: null})
+          if(this.$refs.order_by_report){
+            setTimeout(() =>{
+              let index = this.$refs.order_by_report.length - 1
+              this.$refs.order_by_report[index].focus()
+            }, 0)
+          }
           break
       }
 
@@ -188,9 +221,14 @@ export default {
     },
 
     getColumnsGroupBy(){
-      return this.newFilter.columns.map(x =>{
+      /*return this.newFilter.columns.map(x =>{
         return {code: get(x, 'column.code'), name: get(x, 'column.name'), sumData: false}
+      })*/
+
+      return this.columns.map(x =>{
+        return x
       })
+
     },
 
     /*filterReport(){

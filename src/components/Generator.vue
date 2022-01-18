@@ -153,7 +153,6 @@ import ReportForm from "./ReportForm";
 import RenderReport from "../render/render.js"
 import dataGeneretor from "../render/generator"
 import {ExcelConverter} from 'pdfmake-to-excel';
-import { validationMixin } from 'vuelidate'
 //import RenderReport from "../render/generator"
 
 
@@ -170,7 +169,7 @@ export default {
       await store.dispatch(this.viewReportApi, {id})
     }*/
   },
-  mixins: [validationMixin],
+  mixins: [],
 
   props: {
 
@@ -325,11 +324,6 @@ export default {
 
     get,
 
-    _formatDate(date, format = 'YYYY-MM-DD HH:mm') {
-      //return date ? moment(date).tz(moment.tz.guess()).format(format) : date;
-      return date ? moment(date).format(format) : date;
-    },
-
     //Fonction qui recharge la page
     async reloadPage(id) {
       await this.$store.dispatch(this.viewReportApi, {id}).then(value => {
@@ -414,6 +408,7 @@ export default {
         logo: this.logo,
         data: get(content, 'table.table.body')
       }
+      console.log("content", contentDefinition)
       const exporter = new ExcelConverter(contentDefinition.title, contentDefinition);
       exporter.downloadExcel();
     },

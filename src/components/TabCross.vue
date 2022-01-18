@@ -12,6 +12,7 @@
                 <q-card flat>
                   <template>
                     <ColumnCross
+                      ref="column_cross"
                       :item="item"
                       :items="newFilter.column_cross"
                       :index="index"
@@ -37,6 +38,7 @@
               <q-card flat>
                 <template>
                   <LineCross
+                    ref="line_cross"
                     :item="item"
                     :items="newFilter.line_cross"
                     :index="index"
@@ -62,6 +64,7 @@
               <q-card flat>
                 <template>
                   <ValueCross
+                    ref="value_cross"
                     :item="item"
                     :items="newFilter.value_cross"
                     :index="index"
@@ -133,13 +136,34 @@ export default {
       switch (type){
 
         case 'column_cross':
-          this.newFilter.column_cross.unshift({column: null, aggregat: null, type: null, data: null, sumData: false})
+          //this.newFilter.column_cross.unshift({column: null, aggregat: null, type: null, data: null, sumData: false})
+          this.newFilter.column_cross.push({column: null, aggregat: null, type: null, data: null, sumData: false})
+          if(this.$refs.column_cross){
+            setTimeout(() =>{
+              let index = this.$refs.column_cross.length - 1
+              this.$refs.column_cross[index].focus()
+            }, 0)
+          }
           break
         case 'line_cross':
-          this.newFilter.line_cross.unshift({column: null, aggregat: null, type: null, data: null, sumData: false})
+          //this.newFilter.line_cross.unshift({column: null, aggregat: null, type: null, data: null, sumData: false})
+          this.newFilter.line_cross.push({column: null, aggregat: null, type: null, data: null, sumData: false})
+          if( this.$refs.line_cross){
+            setTimeout(() =>{
+              let index = this.$refs.line_cross.length - 1
+              this.$refs.line_cross[index].focus()
+            }, 0)
+          }
           break
         case 'value_cross':
-          this.newFilter.value_cross.unshift({column: null, name: null, aggregat: {name: 'SOMME', code:'sum'}, sumData: false})
+          //this.newFilter.value_cross.unshift({column: null, name: null, aggregat: {name: 'SOMME', code:'sum'}, sumData: false})
+          this.newFilter.value_cross.push({column: null, name: null, aggregat: {name: 'SOMME', code:'sum'}, sumData: false})
+          if(this.$refs.value_cross){
+            setTimeout(() =>{
+              let index =  this.$refs.value_cross.length - 1
+              this.$refs.value_cross[index].focus()
+            }, 0)
+          }
           break
       }
       //console.log('yes',  this.newFilter.column_cross)
@@ -177,7 +201,6 @@ export default {
     'newFilter': {
       handler: async function (val, oldVal){
         if(val){
-          console.log(`in watch TabCross`, val)
         }
       },
       deep: true,

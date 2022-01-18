@@ -16,6 +16,7 @@
     <div class="col-4"> <q-select  dense outlined class="q-mr-md"
                                    clearable clear-icon="fa fa-times"
                                    label=""
+                                   ref="mySelect"
                                    v-model="item.column"
                                    :options="availableFilterColumns"
                                    :hide-bottom-space="true"
@@ -134,6 +135,10 @@ export default {
   },
 
   methods:{
+
+    focus(){
+      this.$refs.mySelect.focus()
+    },
 
     get,
     deleteColumn(data, index){

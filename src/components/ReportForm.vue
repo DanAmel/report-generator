@@ -498,10 +498,13 @@ export default {
       let options = {}
       this.newFilter.isValid = !this.$v.$invalid
       this.newFilter.table = get(this.mReport,'table_name')
+
       columns = this.newFilter.columns.map(x => {
+
         return  {name: get(x, 'column.name'), code: get(x,'column.code'), aggregate: get(x, 'column.aggregat.code'), type: get(x, 'column.type'),
-          data: get(x, 'column.data'), alias: get(x, 'column.alias'), sumData: get(x, 'column.sumData', true)}
+          data: get(x, 'column.data'), alias: get(x, 'column.alias'), sumData: get(x, 'column.sumData')}
       })
+
       conditions = this.newFilter.conditions.map(x => {
         return  {condition: get(x, 'condition.code'), name: get(x, 'column.code'), operand: get(x, 'operand.code'), value: get(x, 'value') }
       })
@@ -640,7 +643,7 @@ export default {
             data: get(x, 'data'),
             alias: get(x, 'alias', ''),
             availaibleAggregat: this.getAvailaibleAgregats(get(x, 'type')),
-            sumData: get(x, 'sumData', true),
+            sumData: get(x, 'sumData'),
           }
         }
       })
@@ -681,10 +684,10 @@ export default {
             type: get(x, 'type'),
             //data: get(x, 'data'),
             //availaibleAggregat: this.getAvailaibleAgregats(get(x, 'type')),
-            sumData: get(x, 'sumData', true),
+            sumData: get(x, 'sumData'),
           },
           aggregat: this.aggregatList.find(y => y.code === get(x, 'aggregat')),
-          sumData: get(x, 'sumData', true),
+          sumData: get(x, 'sumData'),
         }
       })
 
@@ -698,7 +701,7 @@ export default {
             type: get(x, 'type'),
             data: get(x, 'data'),
             //availaibleAggregat: this.getAvailaibleAgregats(get(x, 'type')),
-            sumData: get(x, 'sumData', true),
+            sumData: get(x, 'sumData'),
           },
           aggregat: this.aggregatList.find(y => y.code === get(x, 'aggregat')),
         }
@@ -715,7 +718,7 @@ export default {
             type: get(x, 'type'),
             data: get(x, 'data'),
             //availaibleAggregat: this.getAvailaibleAgregats(get(x, 'type')),
-            sumData: get(x, 'sumData', true),
+            sumData: get(x, 'sumData'),
           }
         }
       })

@@ -5,6 +5,7 @@
     <div class="col-6">
 
       <q-select  dense outlined class="q-mr-md" clearable
+                 ref="mySelect"
                  v-model="item.column"
                  label="Choisir le champ"
                  :options="availableFilterColumns"
@@ -78,6 +79,10 @@ export default {
   },
 
   methods:{
+
+    focus(){
+      this.$refs.mySelect.focus()
+    },
 
     deleteColumn(data, index){
       this.removeItem(data, index)

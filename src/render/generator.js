@@ -24,7 +24,7 @@ function groupData(myObject, acc,  elementGroup){
 
 function getDataRows(elementGroup, payloadData ){
 
- return _reduce(elementGroup, function (result, value, key){
+  return _reduce(elementGroup, function (result, value, key){
 
     let data = key === 0 ? payloadData : result
 
@@ -44,17 +44,20 @@ function getDataRows(elementGroup, payloadData ){
 function getHeader(columnList){
   let header = []
   let width = []
+  let mapHeader = []
   columnList.forEach(column =>{
     let label = get(column, 'alias')
     header.push({ text: label && label !== ''? label : get(column, 'name'), style: ['header']})
     width.push('*')
+    mapHeader.push(label && label !== ''? label : get(column, 'name'))
   })
-  return {header: [header], width: width, headerRows: 1}
+  return {header: [header], width: width, headerRows: 1, mapHeader}
 }
 
 function getContent(dataRows, columnList, isGrouped = false, counterKey=0, acc= [], sumAllContent = {}){
 
   let tempData = []
+  let mapBody = []
 
   if(dataRows.length === 0){
     let result2 = []
@@ -70,17 +73,18 @@ function getContent(dataRows, columnList, isGrouped = false, counterKey=0, acc= 
   }
 
   if(!isGrouped){ // Si pas de groupage
-    acc = printCells(dataRows, columnList, counterKey)
+    acc = printCells(dataRows, columnList, counterKey, mapBody)
   }
   else{
     dataRows.forEach((data, key) =>{
 
       //Affichage de la clé (groupe)
       columnList.forEach((column, idx) => {
+        let border = counterKey === 0 ? [0,1,0,0] : [0,0,0,0]
         if(idx === counterKey)
-          tempData.push({ text:  `${formatData(data[0], column)}`, style:['key'], border: [0,0,0,0]})
+          tempData.push({ text:  `${formatData(data[0], column)}`, style:['key'], border: border, type: get(column, 'type')})
         else
-          tempData.push({ text:  ``, style:['element'], border: [0,0,0,0]})
+          tempData.push({ text:  ``, style:['element'], border: border})
       })
       acc.push(tempData)
       tempData = []
@@ -105,63 +109,68 @@ function getContent(dataRows, columnList, isGrouped = false, counterKey=0, acc= 
         getContent(_toPairs(data[1]), columnList, true, counterKey+1, acc, sumAllContent)
       }
 
-      //On fait la somme des data du groupe
-      columnList.forEach((column, idx) => {
-        let sum = 0
-        if(idx === counterKey){
-          tempData.push({text: `Total ${formatData(data[0], column)} `, style: ['totalKey'], border:[0,1,0,0]})
-        }
-        else if (idx > counterKey && isNumeric(column) && column.sumData){
+      if(columnList.some(x => x.sumData)) {
 
-          if(Array.isArray(data[1]))
-            sum += getSumContent(data[1], column, sum)
-          else
-            sum += getSumContent(_toPairs(data[1]), column, sum, true)
+        //On fait la somme des data du groupe
+        columnList.forEach((column, idx) => {
+          let sum = 0
+          if(idx === counterKey){
+            tempData.push({text: `Total ${formatData(data[0], column)} `, style: ['totalKey'], border:[0,1,0,0]})
+          }
+          else if (idx > counterKey && isNumeric(column) && column.sumData){
 
-          tempData.push({text: `${formatData(sum, 'int4')}`, style: ['total'], border:[0,1,0,0]})
-        }
-        /*else if (idx > counterKey && !isNumeric(column) ){
+            if(Array.isArray(data[1]))
+              sum += getSumContent(data[1], column, sum)
+            else
+              sum += getSumContent(_toPairs(data[1]), column, sum, true)
 
-          tempData.push({text: ``, style: ['total'], border:[0,1,0,0]})
-        }*/
-        else{
-          tempData.push({text: ``, style: ['total'], border:[0,1,0,0]})
-        }
+            tempData.push({text: `${formatData(sum, 'int4')}`, style: ['total'], border:[0,1,0,0]})
+          }
+          /*else if (idx > counterKey && !isNumeric(column) ){
 
-      })
-      acc.push(tempData)
-      tempData = []
+            tempData.push({text: ``, style: ['total'], border:[0,1,0,0]})
+          }*/
+          else{
+            tempData.push({text: ``, style: ['total'], border:[0,1,0,0]})
+          }
 
-      //On fait les pourcentages des data du groupe
-      columnList.forEach((column, idx) =>   {
-        let sum = 0
-        if(idx === counterKey){
-          tempData.push({text: `Pourcentage `, style: ['totalKey'], border:[0,0,0,1]})
-        }
-        else if (idx > counterKey && isNumeric(column) && column.sumData){
-          //console.log('col', column)
+        })
+        acc.push(tempData)
+        tempData = []
 
-          if(Array.isArray(data[1]))
-            sum += getSumContent(data[1], column, sum)
-          else
-            sum += getSumContent(_toPairs(data[1]), column, sum, true)
+        //On fait les pourcentages des data du groupe
+        columnList.forEach((column, idx) =>   {
+          let sum = 0
+          if(idx === counterKey){
+            tempData.push({text: `Pourcentage `, style: ['totalKey'], border:[0,0,0,1]})
+          }
+          else if (idx > counterKey && isNumeric(column) && column.sumData){
+            //console.log('col', column)
 
-          let percent = sumAllContent[get(column, 'code')] !== 0 ? (sum/sumAllContent[get(column, 'code')] ) * 100 : 0
-          tempData.push({text: `${separatorNumber(_round(percent, 2))}%`, style: ['total'], border:[0,0,0,1]})
-        }
+            if(Array.isArray(data[1]))
+              sum += getSumContent(data[1], column, sum)
+            else
+              sum += getSumContent(_toPairs(data[1]), column, sum, true)
 
-       /* else if (idx > counterKey && !isNumeric(column)){
-          //console.log('col', column)
-          tempData.push({text: ``, style: ['total'], border:[0,0,0,1]})
-        }*/
+            let percent = sumAllContent[get(column, 'code')] !== 0 ? (sum/sumAllContent[get(column, 'code')] ) * 100 : 0
+            tempData.push({text: `${separatorNumber(_round(percent, 2))}%`, style: ['total'], border:[0,0,0,1]})
+          }
+
+          /* else if (idx > counterKey && !isNumeric(column)){
+             //console.log('col', column)
+             tempData.push({text: ``, style: ['total'], border:[0,0,0,1]})
+           }*/
 
 
-        else{
-          tempData.push({text: ``, style: ['total'], border:[0,0,0,1]})
-        }
-      })
-      acc.push(tempData)
-      tempData = []
+          else{
+            tempData.push({text: ``, style: ['total'], border:[0,0,0,1]})
+          }
+        })
+        acc.push(tempData)
+        tempData = []
+
+      }
+
     })
   }
 
@@ -289,15 +298,16 @@ function isNumeric(column){
 
 }
 
-function printCells(data, columnList, counterKey){
+function printCells(data, columnList, counterKey, mapBody =[]){
 
   let acc = []
   let tempData = []
   data.forEach((x, idx) =>{
     columnList.forEach((column, idx) => {
       if (idx > counterKey){
+        mapBody.push(get(x, get(column, 'code', ''), ''))
         let val = formatData(get(x, get(column, 'code', ''), ''), column)
-        tempData.push({text: `${val}`, style: ['element'], border:[1,1,1,1]})
+        tempData.push({text: `${val}`, style: ['element'], border:[1,1,1,1], type: get(column, 'type')})
       }
       else
         tempData.push({text: ``, style: ['element'], border:[1,1,1,1]})
@@ -318,19 +328,22 @@ function printTotalG(sumAllContent, columnList, acc, isGrouped = true){
   else
     border = [1,1,1,1]
 
-  columnList.forEach((column, idx) => {
-    if(idx === 0){
-      tempData.push({text: `Total Général `, style: ['totalG'], border:border})
-    }
-    else if (idx > 0 && isNumeric(column) && column.sumData){
-      tempData.push({text: `${separatorNumber(_round(sumAllContent[get(column, 'code')], 3))}`, style: ['total'], border:border})
-    }
-    else{
-      tempData.push({text: ``, style: ['total'], border:border})
-    }
+  if(columnList.some(x => x.sumData)) {
+    columnList.forEach((column, idx) => {
+      if(idx === 0){
+        tempData.push({text: `Total Général `, style: ['totalG'], border:border})
+      }
+      else if (idx > 0 && isNumeric(column) && column.sumData){
+        tempData.push({text: `${separatorNumber(_round(sumAllContent[get(column, 'code')], 3))}`, style: ['total'], border:border, type: get(column, 'type')})
+      }
+      else{
+        tempData.push({text: ``, style: ['total'], border:border})
+      }
 
-  })
-  acc.push(tempData)
+    })
+    acc.push(tempData)
+  }
+
   return acc
 }
 
@@ -391,9 +404,9 @@ function getDynamikHeader(nodes, column_cross,  value_cross =[], columns=[]){
   }
 
   //Ajout des totaux de fin de ligne
-    for(let i=0; i<value_cross_lenght; i++){
-      width.push("*")
-    }
+  for(let i=0; i<value_cross_lenght; i++){
+    width.push("*")
+  }
 
   //Ligne des colonnes
   width.push("*")
@@ -574,11 +587,11 @@ function getDynamikContent(nodes, line_cross, column_list, dataMap, datas, level
     let line = node[0]
 
 
-   /* console.log('line_cross', line_cross)
-    console.log('col', col)
-    console.log('level', level)
-    console.log('line', line)
-    console.log('previousValue', previousValue)*/
+    /* console.log('line_cross', line_cross)
+     console.log('col', col)
+     console.log('level', level)
+     console.log('line', line)
+     console.log('previousValue', previousValue)*/
     /*console.log('line_cross', line_cross)
 
     console.log('line_name', line_name)
@@ -603,7 +616,7 @@ function getDynamikContent(nodes, line_cross, column_list, dataMap, datas, level
     result.push(printDynamikLine(line, column_list, value_cross, datas, dataMap, filter, level))
 
     //Mise a jour de la valeur de filtre de ligne
-   // console.log('get(line_cross[level-1], \'column\')', line_cross[level-1])
+    // console.log('get(line_cross[level-1], \'column\')', line_cross[level-1])
 
     //if(level-1 >= 0)
     previousValue[get(line_cross[level], 'column')] =  node[0]
@@ -688,7 +701,7 @@ function printDynamikLine(line, column_list, value_cross, datas, dataMap, filter
       else{
         data = filterData.length
       }
-      temp.push({ text: `${formatData(data, value_cross[indexValue])}`, style: ['element'] , bold: level===0 })
+      temp.push({ text: `${formatData(data, value_cross[indexValue])}`, style: ['element'] , bold: level===0, type: 'int' })
 
       total_acc[indexValue] += data
 
@@ -707,7 +720,7 @@ function printDynamikLine(line, column_list, value_cross, datas, dataMap, filter
 
   //Ajout des dernières lignes
   for(let i=0; i<value_cross.length; i++)
-    temp.push({ text: `${formatData(total_acc[i], 'int')}`, style: ['element'] , bold: true })
+    temp.push({ text: `${formatData(total_acc[i], 'int')}`, style: ['element'] , bold: true, type: 'int' })
 
 
   return temp
@@ -746,7 +759,7 @@ function sumAllDynamikContent(datas, dataMap, column_list, value_cross){
       else{
         data = filterData.length
       }
-      totalGeral.push({ text: `${formatData(data, value_cross[indexValue])}`, style: ['element']})
+      totalGeral.push({ text: `${formatData(data, value_cross[indexValue])}`, style: ['element'], type: 'int'})
       //console.log("data", data)
 
       total_acc[indexValue] += data
@@ -766,7 +779,7 @@ function sumAllDynamikContent(datas, dataMap, column_list, value_cross){
 
   //Ajout des dernières lignes
   for(let i=0; i<value_cross.length; i++)
-    totalGeral.push({ text: `${formatData(total_acc[i], 'int')}`, style: ['element'] , bold: true })
+    totalGeral.push({ text: `${formatData(total_acc[i], 'int')}`, style: ['element'] , bold: true, type: 'int' })
 
   return totalGeral
 }
@@ -833,8 +846,8 @@ let f = function (payload) {
   //let header =  getHeader(columns)
   let header = isDynamik ? getDynamikHeader(column_cross_paired, column_cross, value_cross, columns) : getHeader(columns)
   let content = isDynamik
-    ? getDynamikContent(line_cross_paired, line_cross, columns, get(header, 'dataMap', []), get(payload, 'rows'),0, value_cross)
-    : getContent(rowsArray, columns, isGrouped, counterKey, [],  sumContent)
+      ? getDynamikContent(line_cross_paired, line_cross, columns, get(header, 'dataMap', []), get(payload, 'rows'),0, value_cross)
+      : getContent(rowsArray, columns, isGrouped, counterKey, [],  sumContent)
 
   //content = getDynamikContent(line_cross_paired, line_cross, columns, get(header, 'dataMap', []), get(payload, 'rows'),0, value_cross)
 

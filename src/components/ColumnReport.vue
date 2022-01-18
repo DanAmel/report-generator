@@ -4,6 +4,7 @@
 <!--    <div class="col-2"> Colonne </div>-->
     <div class="col-4">
       <q-select  dense outlined class="q-mr-md" clearable
+                 ref="mySelect"
                  v-model="item.column"
                  label="Choisir le champ"
                  :options="availableFilterColumns"
@@ -83,6 +84,10 @@ export default {
   },
 
   methods:{
+
+    focus(){
+      this.$refs.mySelect.focus()
+    },
 
     changeAgregat(){
       this.item.column.aggregat = this.selectedAgregat
