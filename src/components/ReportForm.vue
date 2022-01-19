@@ -73,7 +73,7 @@
                 </div>
               </div>
 
-              <div class="row no-wrap q-pa-md">
+<!--              <div class="row no-wrap q-pa-md" v-show="true">
                 <div class="col-md-10">
                   <q-select  dense outlined class="q-mr-md"
                              v-if="apply_filter"
@@ -89,7 +89,7 @@
                 <div class="col-md-2">
                   <q-checkbox  class="q-mt-lg" dense v-model="apply_filter" label="Appliquer le filtre" left-label />
                 </div>
-              </div>
+              </div>-->
 
               <div class="row no-wrap q-pa-md">
 

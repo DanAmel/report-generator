@@ -324,6 +324,11 @@ export default {
 
     get,
 
+    _formatDate(date, format = 'YYYY-MM-DD HH:mm') {
+      //return date ? moment(date).tz(moment.tz.guess()).format(format) : date;
+      return date ? moment(date).format(format) : date;
+    },
+
     //Fonction qui recharge la page
     async reloadPage(id) {
       await this.$store.dispatch(this.viewReportApi, {id}).then(value => {
