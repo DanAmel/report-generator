@@ -1,6 +1,6 @@
 {
   "name": "pdf-report-generator",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Component that generate a quasar.js report ",
   "main": "index.js",
   "scripts": {

@@ -443,12 +443,11 @@ export default {
         return null
       }
 
-      let start_date = this.datesRange.from ? this._formatDate(this.datesRange.from, 'YYYY-MM-DD') : this._formatDate(this.datesRange, 'YYYY-MM-DD')
-      let end_date = this.datesRange.to ?  this._formatDate(this.datesRange.to, 'YYYY-MM-DD') : this._formatDate(this.datesRange, 'YYYY-MM-DD')
+      let start_date = this.datesRange.from ? moment(this.datesRange.from).format( 'YYYY-MM-DD') : moment(this.datesRange).format( 'YYYY-MM-DD')
+      let end_date = this.datesRange.to ?  moment(this.datesRange.to).format( 'YYYY-MM-DD') : moment(this.datesRange).format('YYYY-MM-DD')
 
-
-      if(start_date !== end_date &&  get(this.filter, 'operand_date.code') !== "between"){
-        this.showNotification({type: false,  message: "Changez le type de filtre à ''Entre'' ou choissiez une date unique"})
+      if(start_date !== end_date &&  get(this.filter, 'operand_date.code', "between") !== "between"){
+        this.showNotification({type: false,  message: "Changez le type de filtre à Entre ou choissiez une date unique"})
         return null
       }
 
@@ -643,11 +642,11 @@ export default {
     selectedRange() {
       if (!!this.datesRange) {
         if (typeof this.datesRange === 'string') {
-          return this._formatDate(this.datesRange, 'DD-MM-YYYY')
+          return moment(this.datesRange).format( 'DD-MM-YYYY')
         }
         if (typeof this.datesRange === 'object') {
-          let from = get(this.datesRange, 'from') ? this._formatDate(this.datesRange.from, 'DD-MM-YYYY') : ''
-          let to = get(this.datesRange, 'to') ? this._formatDate(this.datesRange.to, 'DD-MM-YYYY') : ''
+          let from = get(this.datesRange, 'from') ? moment(this.datesRange.from).format('DD-MM-YYYY') : ''
+          let to = get(this.datesRange, 'to') ? moment(this.datesRange.to).format('DD-MM-YYYY') : ''
           return from + ' - ' + to
         }
       }
