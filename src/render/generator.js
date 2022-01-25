@@ -24,7 +24,7 @@ function groupData(myObject, acc,  elementGroup){
 
 function getDataRows(elementGroup, payloadData ){
 
-  return _reduce(elementGroup, function (result, value, key){
+ return _reduce(elementGroup, function (result, value, key){
 
     let data = key === 0 ? payloadData : result
 
@@ -95,7 +95,7 @@ function getContent(dataRows, columnList, isGrouped = false, counterKey=0, acc= 
         data[1].forEach((x, idx) => {
           columnList.forEach((column, idx) => {
             if (idx > counterKey)
-              tempData.push({text: `${formatData(get(x, get(column, 'code', ''), ''), column)}`, style: ['element'], border:[0,0,0,0]})
+              tempData.push({text: `${formatData(get(x, get(column, 'code', ''), ''), column)}`, style: ['element'], border:[0,0,0,0], type: get(column, 'type')})
             else
               tempData.push({text: ``, style: ['element'], border:[0,0,0,0]})
           })
@@ -270,7 +270,7 @@ function formatData(data, column){
       break
   }
 
-  if(Array.isArray(column.data) && column.data.length > 0){
+  if(column.data && Array.isArray(column.data) && column.data.length > 0){
     let elmt = column.data.find(x => x.code === data)
     if(elmt)
       value = get(elmt, 'name')
@@ -404,9 +404,9 @@ function getDynamikHeader(nodes, column_cross,  value_cross =[], columns=[]){
   }
 
   //Ajout des totaux de fin de ligne
-  for(let i=0; i<value_cross_lenght; i++){
-    width.push("*")
-  }
+    for(let i=0; i<value_cross_lenght; i++){
+      width.push("*")
+    }
 
   //Ligne des colonnes
   width.push("*")
@@ -587,11 +587,11 @@ function getDynamikContent(nodes, line_cross, column_list, dataMap, datas, level
     let line = node[0]
 
 
-    /* console.log('line_cross', line_cross)
-     console.log('col', col)
-     console.log('level', level)
-     console.log('line', line)
-     console.log('previousValue', previousValue)*/
+   /* console.log('line_cross', line_cross)
+    console.log('col', col)
+    console.log('level', level)
+    console.log('line', line)
+    console.log('previousValue', previousValue)*/
     /*console.log('line_cross', line_cross)
 
     console.log('line_name', line_name)
@@ -616,7 +616,7 @@ function getDynamikContent(nodes, line_cross, column_list, dataMap, datas, level
     result.push(printDynamikLine(line, column_list, value_cross, datas, dataMap, filter, level))
 
     //Mise a jour de la valeur de filtre de ligne
-    // console.log('get(line_cross[level-1], \'column\')', line_cross[level-1])
+   // console.log('get(line_cross[level-1], \'column\')', line_cross[level-1])
 
     //if(level-1 >= 0)
     previousValue[get(line_cross[level], 'column')] =  node[0]
@@ -701,8 +701,15 @@ function printDynamikLine(line, column_list, value_cross, datas, dataMap, filter
       else{
         data = filterData.length
       }
-      temp.push({ text: `${formatData(data, value_cross[indexValue])}`, style: ['element'] , bold: level===0, type: 'int' })
+      /*console.log("line",line)
+      if(line === "Bohicon"){
+        console.log('Data', data)
+      }*/
 
+      temp.push({ text: `${formatData(data, value_cross[indexValue])}`, style: ['element'] , bold: level===0, type: 'int' })
+      /*if(line === "Bohicon"){
+        console.log('tab', { text: `${formatData(data, value_cross[indexValue])}`, style: ['element'] , bold: level===0, type: 'int' })
+      }*/
       total_acc[indexValue] += data
 
       //console.log("data", data)
@@ -846,8 +853,8 @@ let f = function (payload) {
   //let header =  getHeader(columns)
   let header = isDynamik ? getDynamikHeader(column_cross_paired, column_cross, value_cross, columns) : getHeader(columns)
   let content = isDynamik
-      ? getDynamikContent(line_cross_paired, line_cross, columns, get(header, 'dataMap', []), get(payload, 'rows'),0, value_cross)
-      : getContent(rowsArray, columns, isGrouped, counterKey, [],  sumContent)
+    ? getDynamikContent(line_cross_paired, line_cross, columns, get(header, 'dataMap', []), get(payload, 'rows'),0, value_cross)
+    : getContent(rowsArray, columns, isGrouped, counterKey, [],  sumContent)
 
   //content = getDynamikContent(line_cross_paired, line_cross, columns, get(header, 'dataMap', []), get(payload, 'rows'),0, value_cross)
 
@@ -876,6 +883,7 @@ let f = function (payload) {
     }
   }
 
+  //console.log("table", table)
   moment.locale('fr');
   //console.log("payload", payload)
 

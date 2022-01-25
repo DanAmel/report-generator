@@ -59,8 +59,6 @@
                 </div>
 
 
-
-
               </div>
 
               <div class="row no-wrap q-pa-md">
@@ -73,7 +71,7 @@
                 </div>
               </div>
 
-<!--              <div class="row no-wrap q-pa-md" v-show="true">
+              <div class="row no-wrap q-pa-md" v-if="false">
                 <div class="col-md-10">
                   <q-select  dense outlined class="q-mr-md"
                              v-if="apply_filter"
@@ -89,7 +87,7 @@
                 <div class="col-md-2">
                   <q-checkbox  class="q-mt-lg" dense v-model="apply_filter" label="Appliquer le filtre" left-label />
                 </div>
-              </div>-->
+              </div>
 
               <div class="row no-wrap q-pa-md">
 
@@ -172,14 +170,14 @@
 
             <q-card-actions class="q-pr-md items-center" align="right">
               <div class="row">
-                <q-btn class="q-pr-xs" icon="fa fa-eye" flat align="right" @click="showPreview" v-if="canCreate">
+                <q-btn class="q-pr-xs" :icon="iconType+'eye'" flat align="right" @click="showPreview" v-if="canCreate">
 
                   <q-tooltip>
                     Prévisualisation
                   </q-tooltip>
                 </q-btn>
 
-                <q-btn class="q-pr-xs" icon="fa fa-save" flat align="right" @click="submit" v-if="canCreate">
+                <q-btn class="q-pr-xs" :icon="iconType+'save'" flat align="right" @click="submit" v-if="canCreate">
                   SAUVEGARDER
                   <q-tooltip>
                     Sauvegarder le rapport en cours
@@ -266,6 +264,14 @@ export default {
       type: String,
       default: '',
     },
+    appNotice: {
+      type: String,
+      default: '',
+    },
+    iconType: {
+      type: String,
+      default: 'fa fa-',
+    },
   },
 
   data() {
@@ -300,7 +306,9 @@ export default {
           column_cross: [],
           line_cross: [],
           value_cross: [],
+          formulas: [],
           app_code: '',
+          app_notice: '',
           options: {},
         },
       validator: this.$v,
@@ -495,6 +503,7 @@ export default {
       let column_cross = []
       let line_cross = []
       let value_cross = []
+      let formulas = []
       let options = {}
       this.newFilter.isValid = !this.$v.$invalid
       this.newFilter.table = get(this.mReport,'table_name')
@@ -525,10 +534,13 @@ export default {
           }
       })
       value_cross = this.newFilter.value_cross.map(x => {
-        //console.log("aaaaaaaa", x)
         return  {name: get(x, 'column.name'), column: get(x,'column.code'), aggregate: get(x, 'aggregat.code'), type: get(x, 'column.type'),
           alias: get(x, 'column.alias')
         }
+      })
+
+      formulas = this.newFilter.formulas.map(x => {
+        return  {expression: get(x, 'expression'), alias: get(x,'alias'), sumData: get(x, 'sumData') , variables: get(x, 'variables')}
       })
 
       return {
@@ -538,6 +550,7 @@ export default {
           operand_date: get(this.newFilter, 'operand_date'),
           column_date: get(this.newFilter, 'dateReport.code'),
           app_code: get(this.mReport, 'app_code'),
+          app_notice: this.appNotice,
           is_all: this.is_all,
           columns: columns,
           conditions: conditions,
@@ -546,6 +559,7 @@ export default {
           column_cross: column_cross,
           line_cross: line_cross,
           value_cross: value_cross,
+          formulas: formulas,
           options: options
       }
     },
@@ -588,6 +602,7 @@ export default {
         operand_date: get(this.newFilter, 'operand_date.code'),
         is_all: this.is_all,
         app_code: get(this.mReport,'app_code'),
+        app_notice: this.appNotice,
         //production_chain_id: this.productionChainUser.id,
         payload_query: filter
       }
@@ -722,6 +737,18 @@ export default {
           }
         }
       })
+
+      this.newFilter.formulas = get(this.newFilter, 'formulas', []).map(x => {
+        //console.log('qqqqqqq',x)
+        return {
+          expression: get(x, 'expression'),
+          alias: get(x, 'alias'),
+          variables: get(x, 'variables'),
+          sumData: get(x, 'sumData'),
+        }
+      })
+
+
 
       //Les options
       this.pageSizeSelected = this.pageSizeList.find(x => x.code === get(this.newFilter, 'options.pageSize', 'A4'))

@@ -5,7 +5,7 @@
       <div class="row no-wrap q-pa-md">
 
         <div class="col-md-12">
-          <q-btn size="sm" flat @click="add('column_cross')" class="text-green" icon="fa fa-plus">Ajouter une colonne</q-btn>
+          <q-btn size="sm" flat @click="add('column_cross')" class="text-green" :icon="iconType+'plus'">Ajouter une colonne</q-btn>
           <q-list dense bordered padding v-if="get(newFilter, 'column_cross', []).length >0">
             <q-item v-for="(item, index) in newFilter.column_cross" v-bind:key="index">
               <q-item-section dense>
@@ -31,7 +31,7 @@
       <div class="row no-wrap q-pa-md">
 
         <div class="col-md-12">
-        <q-btn size="sm" flat @click="add('line_cross')" class="text-green" icon="fa fa-plus">Ajouter une Ligne</q-btn>
+        <q-btn size="sm" flat @click="add('line_cross')" class="text-green" :icon="iconType+'plus'">Ajouter une Ligne</q-btn>
         <q-list dense bordered padding v-if="get(newFilter, 'line_cross', []).length >0">
           <q-item v-for="(item, index) in newFilter.line_cross" v-bind:key="index">
             <q-item-section dense>
@@ -57,7 +57,7 @@
       <div class="row no-wrap q-pa-md">
 
         <div class="col-md-12">
-        <q-btn size="sm" flat @click="add('value_cross')" class="text-green" icon="fa fa-plus">Ajouter une valeur</q-btn>
+        <q-btn size="sm" flat @click="add('value_cross')" class="text-green" :icon="iconType+'plus'">Ajouter une valeur</q-btn>
         <q-list dense bordered padding v-if="get(newFilter, 'value_cross', []).length >0">
           <q-item v-for="(item, index) in newFilter.value_cross" v-bind:key="index">
             <q-item-section dense>
@@ -115,6 +115,10 @@ export default {
     },
     validator: {
       type: Object,
+    },
+    iconType: {
+      type: String,
+      default: 'fa fa-',
     },
 
   },

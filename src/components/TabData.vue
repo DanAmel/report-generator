@@ -5,7 +5,7 @@
       <div class="row no-wrap q-pa-md">
 
         <div class="col-md-12">
-          <q-btn size="sm" flat @click="add('column')" class="text-green" icon="fa fa-plus">Ajouter une colonne</q-btn>
+          <q-btn size="sm" flat @click="add('column')" class="text-green" :icon="iconType+'plus'">Ajouter une colonne</q-btn>
           <q-list dense bordered padding v-if="get(newFilter, 'columns', []).length >0">
             <q-item v-for="(item, index) in newFilter.columns" v-bind:key="index">
               <q-item-section dense>
@@ -17,6 +17,35 @@
                       :items="newFilter.columns"
                       :index="index"
                       :validator="validator"
+                      :icon-type="iconType"
+                      :available-columns="availableColumns"/>
+                  </template>
+                </q-card>
+              </q-item-section>
+            </q-item>
+
+          </q-list>
+        </div>
+
+      </div>
+
+
+      <div class="row no-wrap q-pa-md">
+
+        <div class="col-md-12">
+          <q-btn size="sm" flat @click="add('formula')" class="text-green" :icon="iconType+'plus'">Ajouter une formule</q-btn>
+          <q-list dense bordered padding v-if="get(newFilter, 'formulas', []).length >0">
+            <q-item v-for="(item, index) in newFilter.formulas" v-bind:key="index">
+              <q-item-section dense>
+                <q-card flat  >
+                  <template>
+                    <FormulaReport
+                      ref="formula_report"
+                      :item="item"
+                      :items="newFilter.formulas"
+                      :index="index"
+                      :validator="validator"
+                      :icon-type="iconType"
                       :available-columns="availableColumns"/>
                   </template>
                 </q-card>
@@ -30,7 +59,7 @@
 
       <div class="row no-wrap q-pa-md">
         <div class="col-md-12">
-          <q-btn size="sm" flat icon="fa fa-plus" class="text-green" @click="add('condition')">Ajouter une Condition</q-btn>
+          <q-btn size="sm" flat :icon="iconType+'plus'" class="text-green" @click="add('condition')">Ajouter une Condition</q-btn>
           <q-list dense bordered padding v-if="get(newFilter, 'conditions', []).length >0">
             <q-item v-for="(item, index) in newFilter.conditions" v-bind:key="index">
               <q-item-section dense>
@@ -42,6 +71,7 @@
                       :items="newFilter.conditions"
                       :index="index"
                       :validator="validator"
+                      :icon-type="iconType"
                       :available-columns="columns" />
                   </template>
                 </q-card>
@@ -54,7 +84,7 @@
 
       <div class="row no-wrap q-pa-md">
         <div class="col-md-12">
-          <q-btn size="sm" flat @click="add('groupBy')" class="text-green" icon="fa fa-plus"> Ajouter un groupe</q-btn>
+          <q-btn size="sm" flat @click="add('groupBy')" class="text-green" :icon="iconType+'plus'"> Ajouter un groupe</q-btn>
           <q-list dense bordered padding v-if="get(newFilter, 'groupBy', []).length >0">
             <q-item v-for="(item, index) in newFilter.groupBy" v-bind:key="index">
               <q-item-section dense>
@@ -67,6 +97,7 @@
                       :items="newFilter.groupBy"
                       :index="index"
                       :validator="validator"
+                      :icon-type="iconType"
                       :available-columns="getColumnsGroupBy"/>
 
                   </template>
@@ -80,7 +111,7 @@
 
       <div class="row no-wrap q-pa-md">
         <div class="col-md-12">
-          <q-btn size="sm" flat @click="add('orderBy')" class="text-green" icon="fa fa-plus"> Ajouter un ordre</q-btn>
+          <q-btn size="sm" flat @click="add('orderBy')" class="text-green" :icon="iconType+'plus'"> Ajouter un ordre</q-btn>
           <q-list dense bordered padding v-if="get(newFilter, 'orderBy', []).length >0">
             <q-item v-for="(item, index) in newFilter.orderBy" v-bind:key="index">
               <q-item-section dense>
@@ -92,6 +123,7 @@
                       :items="newFilter.orderBy"
                       :index="index"
                       :validator="validator"
+                      :icon-type="iconType"
                       :available-columns="getColumnsGroupBy"/>
                   </template>
                 </q-card>
@@ -114,10 +146,11 @@ import clone from 'lodash/cloneDeep'
 export default {
   name: 'TabData',
   components: {
-    ColumnReport: () => import('./ColumnReport.vue'),
-    ConditionReport: () => import('./ConditionReport.vue'),
-    GroupByReport: () => import('./GroupByReport.vue'),
-    OrderByReport: () => import('./OrderByReport.vue')},
+    ColumnReport: () => import('./ColumnReport'),
+    FormulaReport: () => import('./FormulaReport'),
+    ConditionReport: () => import('./ConditionReport'),
+    GroupByReport: () => import('./GroupByReport'),
+    OrderByReport: () => import('./OrderByReport')},
   model: {
     prop: 'value',
     event: 'input',
@@ -135,6 +168,11 @@ export default {
     },
     validator: {
       type: Object,
+    },
+
+    iconType: {
+      type: String,
+      default: 'fa fa-',
     },
 
   },
@@ -193,6 +231,16 @@ export default {
             setTimeout(() =>{
               let index = this.$refs.order_by_report.length - 1
               this.$refs.order_by_report[index].focus()
+            }, 0)
+          }
+          break
+        case 'formula':
+          this.newFilter.formulas.push({expression: null, sumData: false})
+
+          if(this.$refs.formula_report){
+            setTimeout(() =>{
+              let index = this.$refs.formula_report.length - 1
+              this.$refs.formula_report[index].focus()
             }, 0)
           }
           break

@@ -2,47 +2,23 @@
 
   <div class="row">
 <!--    <div class="col-2"> Colonne </div>-->
-    <div class="col-6">
 
-      <q-select  dense outlined class="q-mr-md" clearable
-                 ref="mySelect"
-         v-model="item.column"
-         label="Choisir une colonne"
-         :options="availableFilterColumns"
-         :hide-bottom-space="true"
-         option-label="name" option-value="code"
-         :options-dense="true"
-         use-input input-debounce="0"
-         error-message="Champ requis."
-         @m-blur="validator.newFilter.value_cross.$each[index].column.$touch"
-         :error="validator.newFilter.value_cross.$each[index].column.$error"
-         @filter="filterAvailableColumns"
-         @input="selectColumn">
-        <template v-slot:no-option>
-          <q-item>
-            <q-item-section class="text-grey">
-              Pas de résultats
-            </q-item-section>
-          </q-item>
-        </template>
-      </q-select>
+    <div class="col-5">
+      <q-input
+        ref="myExpression"
+        v-model="item.expression"
+        class="q-ml-md"
+        dense label="Expression" />
 
     </div>
-    <div class="col-3 justify-start">
-      <!--                                {{item.column}}-->
-      <q-select  dense outlined class="" clearable
-         v-model="selectedAgregat"
-         label="Sous total"
-         :options="getAvailaibleAgregats(item.column)"
-         :hide-bottom-space="true"
-         option-label="name" option-value="code"
-         :options-dense="true"
-         @input="changeAgregat"> </q-select>
+    <div class="col-5 justify-start">
+      <q-input
+        v-model="item.alias"
+        class="q-ml-md"
+        dense label="Libellé" />
     </div>
 
-    <div class="col-2">
-      <q-checkbox v-if="item.column && isNumeric" class="q-ml-md" v-model="item.column.sumData" label="Sous total" left-label />
-    </div>
+    <div class="col-1"> <q-icon class="q-mx-xs q-mt-md" color="black" size="25px" :name="iconType+'exclamation-circle'" @click="addVariables" /> </div>
 
     <div class="col-1"> <q-icon class="q-mx-xs q-mt-md" color="red" :name="iconType+'times'" @click="deleteColumn(items, index)" /> </div>
   </div>
@@ -50,10 +26,13 @@
 </template>
 
 <script>
+
 import get from "lodash/get";
+import {Parser} from 'expr-eval'
+import VariablesFormulaDialog from "./VariablesFormula";
 
 export default {
-  name: "ValueCross",
+  name: "FormulaReport",
   props:{
     item: {
       type : [Array, Object]
@@ -75,10 +54,13 @@ export default {
       default: 'fa fa-',
     },
   },
+  components: {
+  },
 
   data(){
     return {
       availableFilterColumns: [],
+      variables: [],
       selectedAgregat: null,
     }
   },
@@ -86,7 +68,7 @@ export default {
   methods:{
 
     focus(){
-      this.$refs.mySelect.focus()
+      this.$refs.myExpression.focus()
     },
 
     changeAgregat(){
@@ -99,7 +81,6 @@ export default {
       }
       this.removeItem(data, index)
     },
-
     removeItem(data, index){
       data.splice(index, 1)
     },
@@ -107,17 +88,46 @@ export default {
     filterAvailableColumns (val, update, abort) {
       update(() => {
         const needle = val.toLowerCase()
-        this.availableFilterColumns = this.availableColumns.filter(v => v.name && v.name.toLowerCase().indexOf(needle) > -1)
+        this.availableFilterColumns = this.availableColumns.filter(v => get(v, 'name', '').toLowerCase().indexOf(needle) > -1)
       })
     },
 
-
-    selectColumn(val){
-      //let index = this.availableColumns.findIndex(x => get(x, 'code') === get(val, 'code'))
-      //this.removeItem(this.availableColumns, index)
-      if(this.item.column)
-        this.item.column.aggregat = null
+    addVariables(){
+      this.$q.dialog({
+        component: VariablesFormulaDialog,
+        parent: this,
+        item: this.item,
+        availableColumns: this.availableColumns.filter(x => this.isColumnNumeric(x)),
+        variables: this.variables
+      }).onOk(async (val) => {
+        //A faire
+        console.log('valll', val)
+        this.item.variables = val
+      })
     },
+
+    isColumnNumeric(column){
+      let result = false
+      let type = get(column, 'type', 'varchar')
+      switch (type){
+        case 'float4':
+        case 'float8':
+        case 'numeric':
+        case 'int4':
+        case 'int8':
+          result = true
+          break
+        default:
+          result = false
+          break
+      }
+
+      return result
+    },
+
+    displayVariable(){
+    },
+
 
     //GESTION DES AGREGATS
     getAvailaibleAgregats(data){
@@ -154,6 +164,30 @@ export default {
       return agreg
     },
 
+    parseExpression(){
+      let parser = new Parser()
+      try {
+
+        let expr = parser.parse(this.item.expression)
+        let variables = expr.variables()
+
+
+        this.variables = variables.reduce((acc, variable) => {
+          //const attribut = this.variables.find(v => v.variable === variable);
+          /*acc.push({
+            variable,
+            column: null,
+          })*/
+          acc.push(variable)
+
+          return acc
+        },[])
+
+      }catch (e) {
+
+      }
+    }
+
   },
 
   computed:{
@@ -175,13 +209,24 @@ export default {
       }
 
       return result
-    }
+    },
+
   },
 
   mounted(){
     if(this.item){
+      this.parseExpression()
       this.selectedAgregat = get(this.item, 'column.aggregat')
     }
+  },
+
+  watch: {
+    'item.expression'(){
+      this.parseExpression()
+    },
+
+
+
   },
 
 

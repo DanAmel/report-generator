@@ -13,7 +13,7 @@
                 <q-breadcrumbs-el
                   class="text-body"
                   style="font-size: 17px"
-                  icon="fa fa-arrow-circle-left" label="Rapports" :to="returnUrl"/>
+                  :icon="iconType+'arrow-circle-left'" label="Rapports" :to="returnUrl"/>
                 <q-breadcrumbs-el
                   class="text-body"
                   style="font-size: 17px"
@@ -26,12 +26,14 @@
               v-show="true"
               ref="ReportForm"
               v-model="filter"
+              :icon-type="iconType"
               :label-filtre-boolean="labelFiltreBoolean"
               :redirect-url="redirectUrl"
               :report-list="reportList"
               :filter-datas="filterDatas"
               :create-report-api="createReportApi"
               :update-report-api="updateReportApi"
+              :app-notice="appNotice"
               :return-url="updateReportApi"
               :can-create="canCreate"
               :can-update="canUpdate"
@@ -42,7 +44,7 @@
             />
 
             <q-btn :label="selectedRange" class="q-ml-sm q-px-md float-right" :color="buttonColorPrimary"
-                   dense icon="fa fa-calendar-alt" unelevated>
+                   dense :icon="iconType+'calendar-alt'" unelevated>
               <q-popup-proxy transition-hide="scale" transition-show="scale" @before-show="updateProxy">
                 <q-date v-model="datesRange" range :color="buttonColorPrimary">
                   <div class="row items-enter  q-gutter-sm">
@@ -92,7 +94,7 @@
 
         <q-btn
           color="red" class="q-ml-sm"
-          size="11px" icon="fa fa-trash"
+          size="11px" :icon="iconType+'trash'"
           label="SUPPRIMER" outline
           v-if="canDelete && currentId"
           @click="onDelete"
@@ -276,10 +278,17 @@ export default {
       type: Array,
       default: ()=>[],
     },
-
     currentReport: {
       type: Object,
-    }
+    },
+    appNotice: {
+      type: String,
+      default: '',
+    },
+    iconType: {
+      type: String,
+      default: 'fa fa-',
+    },
   },
 
   data() {
@@ -324,11 +333,6 @@ export default {
 
     get,
 
-    _formatDate(date, format = 'YYYY-MM-DD HH:mm') {
-      //return date ? moment(date).tz(moment.tz.guess()).format(format) : date;
-      return date ? moment(date).format(format) : date;
-    },
-
     //Fonction qui recharge la page
     async reloadPage(id) {
       await this.$store.dispatch(this.viewReportApi, {id}).then(value => {
@@ -348,6 +352,7 @@ export default {
       mFilter.title = get(reportPdf, 'report_title')
       mFilter.operand_date = get(reportPdf, 'payload_query.operand_date')
       mFilter.columns = get(reportPdf, 'payload_query.columns')
+      mFilter.formulas = get(reportPdf, 'payload_query.formulas')
       mFilter.conditions = get(reportPdf, 'payload_query.conditions')
       mFilter.groupBy = get(reportPdf, 'payload_query.groupBy')
       mFilter.orderBy = get(reportPdf, 'payload_query.orderBy')
@@ -360,6 +365,7 @@ export default {
       mFilter.filterBy = get(reportPdf, 'payload_query.filterBy')
       mFilter.isValid = true
       mFilter.app_code = get(reportPdf, 'app_code')
+      mFilter.app_notice = get(reportPdf, 'app_notice')
       mFilter.options = get(reportPdf, 'payload_query.options')
 
       return mFilter
@@ -372,8 +378,8 @@ export default {
     async setupPdf(payload) {
 
       this.loading = true
-      payload.campaign = get(this.currentCampaign, 'name')
-      payload.user_name = get(this._currentUser, 'account.employee.full_name')
+      //payload.campaign = get(this.currentCampaign, 'name')
+      //payload.user_name = get(this._currentUser, 'account.employee.full_name')
       payload.production_chain_name = get(this.productionChainUser, 'name')
       payload.start_date = this.datesRange.from ? moment(this.datesRange.from).format("DD/MM/YYYY") : moment(this.datesRange).format("DD/MM/YYYY")
       payload.end_date = this.datesRange.to ? moment(this.datesRange.to).format("DD/MM/YYYY") : moment(this.datesRange).format("DD/MM/YYYY")
@@ -384,7 +390,6 @@ export default {
       //payload.campaign = this.currentCampaign
 
        let dat =  await this.otherDatas.then(val => val)
-      //console.log("this.otherDatas", dat)
 
        payload = assign(payload, dat)
 
@@ -408,13 +413,15 @@ export default {
 
     downloadExcelFile(value) {
      let content = dataGeneretor(value)
+      //console.log("content", _.cloneDeep(content))
       let contentDefinition = {
        title: content.title,
         logo: this.logo,
         data: get(content, 'table.table.body')
       }
-      console.log("content", contentDefinition)
-      const exporter = new ExcelConverter(contentDefinition.title, contentDefinition);
+      console.log("contentDefinition", _.cloneDeep(contentDefinition))
+      let tempContent =  _.cloneDeep(contentDefinition)
+      const exporter = new ExcelConverter(contentDefinition.title, tempContent);
       exporter.downloadExcel();
     },
 
@@ -441,7 +448,7 @@ export default {
 
 
       if(start_date !== end_date &&  get(this.filter, 'operand_date.code') !== "between"){
-        this.showNotification({type: false,  message: "Changez le type de filtre à Entre ou choissiez une date unique"})
+        this.showNotification({type: false,  message: "Changez le type de filtre à ''Entre'' ou choissiez une date unique"})
         return null
       }
 
@@ -460,6 +467,7 @@ export default {
         column_date: get(this.filter, 'column_date'),
         operand_date: get(this.filter, 'operand_date.code', "between"),
         app_code: get(this.filter, 'app_code', 'SERP'),
+        app_notice: this.appNotice,
         is_all: get(this.filter, 'is_all', true)
       }
       let dat =  await this.otherDatas.then(val => val)

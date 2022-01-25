@@ -14,7 +14,7 @@
     > </q-select> </div>
 
     <div class="col-4"> <q-select  dense outlined class="q-mr-md"
-                                   clearable clear-icon="fa fa-times"
+                                   clearable :clear-icon="iconType+'times'"
                                    label=""
                                    ref="mySelect"
                                    v-model="item.column"
@@ -32,7 +32,7 @@
 
     </div>
     <div class="col-3"> <q-select  dense outlined class="q-mr-md"
-                                   clearable clear-icon="fa fa-times"
+                                   clearable :clear-icon="iconType+'times'"
                                    label="Opérande"
                                    v-model="item.operand"
                                    :options="getAvailaibleOperands"
@@ -76,7 +76,7 @@
                  @input="onChangeDataInput"
       > </q-select>
     </div>
-    <div class="col-1 justify-center"> <q-icon class="q-mx-xs q-mt-md" color="red" name="fa fa-times" @click="removeItem(items, index)" /> </div>
+    <div class="col-1 justify-center"> <q-icon class="q-mx-xs q-mt-md" color="red" :name="iconType+'times'" @click="removeItem(items, index)" /> </div>
   </div>
 
 </template>
@@ -101,6 +101,10 @@ export default {
     },
     validator: {
       type : [Array, Object]
+    },
+    iconType: {
+      type: String,
+      default: 'fa fa-',
     },
   },
 

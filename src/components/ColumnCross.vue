@@ -47,7 +47,7 @@
       <q-checkbox v-if="item.column && isNumeric" class="q-ml-md" v-model="item.column.sumData" label="Sous total" left-label />
     </div>
 
-    <div class="col-1"> <q-icon class="q-mx-xs q-mt-md" color="red" name="fa fa-times" @click="deleteColumn(items, index)" /> </div>
+    <div class="col-1"> <q-icon class="q-mx-xs q-mt-md" color="red" :name="iconType+'times'" @click="deleteColumn(items, index)" /> </div>
   </div>
 
 </template>
@@ -72,6 +72,10 @@ export default {
     },
     validator: {
       type : [Array, Object]
+    },
+    iconType: {
+      type: String,
+      default: 'fa fa-',
     },
   },
 

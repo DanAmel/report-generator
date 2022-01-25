@@ -40,7 +40,7 @@
                  :error="validator.newFilter.orderBy.$each[index].sens.$error"
       > </q-select>
     </div>
-    <div class="col-1"> <q-icon class="q-mx-xs q-mt-md" color="red" name="fa fa-times" @click="deleteColumn(items, index)" /> </div>
+    <div class="col-1"> <q-icon class="q-mx-xs q-mt-md" color="red" :name="iconType+'times'" @click="deleteColumn(items, index)" /> </div>
   </div>
 
 </template>
@@ -65,6 +65,10 @@ export default {
     },
     validator: {
       type : [Array, Object]
+    },
+    iconType: {
+      type: String,
+      default: 'fa fa-',
     },
   },
 
