@@ -207,6 +207,33 @@ import get from "lodash/get";
 import clone from 'lodash/cloneDeep'
 import {mapActions, mapState} from "vuex";
 import {required, requiredIf} from 'vuelidate/lib/validators'
+import {Parser} from 'expr-eval'
+
+const expression = (value) => {
+  try{
+    let parser = new Parser()
+    let expr = parser.parse(value)
+    return true
+  }catch (e){
+    return false
+  }
+}
+
+const checkVariable = (value) => {
+  let temoin = true
+  if(value.length > 0){
+    for(let i=0; i<value.length; i++){
+      if(!value[i].column || !value[i].variable)
+        temoin =  false
+      if(!temoin)
+        break;
+    }
+  }
+  else
+    temoin =  false
+
+  return temoin
+}
 
 export default {
   name: 'ReportForm',
@@ -355,6 +382,13 @@ export default {
       columns: {
         $each:{
           column: {required},
+        }
+      },
+      formulas: {
+        $each:{
+          expression: {required, expression},
+          alias: {required},
+          variables: {checkVariable},
         }
       },
       conditions:{
@@ -577,6 +611,14 @@ export default {
     showPreview(id) {
       //console.log("1 showPreview")
       this.change()
+
+      this.$v.$touch()
+      console.log("this.$v", this.$v)
+      if (this.$v.$invalid) {
+        this.showNotification({type: false,  message: 'Vérifiez si tous les champs sont correctement remplis!'})
+        return null
+      }
+
       this.$emit('showPreview', id)
       this.hide()
     },
@@ -584,6 +626,7 @@ export default {
     async submit(){
 
       this.$v.$touch()
+      console.log("this.$v", this.$v)
       if (this.$v.$invalid) {
         //this.Motify('error', 'Vérifiez si tous les champs sont correctement remplis!')
         this.showNotification({type: false,  message: 'Vérifiez si tous les champs sont correctement remplis!'})
@@ -842,7 +885,6 @@ export default {
     'reportList': {
       handler: async function (val, oldVal){
         if(val){
-
           this.mReport = this.reportList.find(x => get(x,'table_name') === get(this.newFilter,'table'))
           let temp = this.dateColumns.find(x => x.code === get(this.newFilter,'column_date'))
           this.newFilter = {...this.newFilter, dateReport: temp ? temp : null}

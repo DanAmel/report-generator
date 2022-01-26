@@ -7,7 +7,7 @@ import _reduce from 'lodash/reduce'
 import _clone from 'lodash/cloneDeep'
 import _toPairs from 'lodash/toPairs'
 import _round from 'lodash/round'
-import _keys from "lodash/keys"
+import {Parser} from 'expr-eval'
 import _filter from "lodash/filter"
 import _sumBy from "lodash/sumBy"
 
@@ -41,7 +41,7 @@ function getDataRows(elementGroup, payloadData ){
   }, {})
 }
 
-function getHeader(columnList){
+function getHeader(columnList, formulas=[]){
   let header = []
   let width = []
   let mapHeader = []
@@ -51,13 +51,21 @@ function getHeader(columnList){
     width.push('*')
     mapHeader.push(label && label !== ''? label : get(column, 'name'))
   })
+  formulas.forEach(column => {
+    let label = get(column, 'alias')
+    header.push({ text: label, style: ['header']})
+    width.push('*')
+    mapHeader.push(label)
+  })
+
   return {header: [header], width: width, headerRows: 1, mapHeader}
 }
 
-function getContent(dataRows, columnList, isGrouped = false, counterKey=0, acc= [], sumAllContent = {}){
+function getContent(dataRows, columnList, isGrouped = false, counterKey=0, acc= [], sumAllContent = {}, formulas=[]){
 
   let tempData = []
   let mapBody = []
+  let mapValue = {}
 
   if(dataRows.length === 0){
     let result2 = []
@@ -73,17 +81,20 @@ function getContent(dataRows, columnList, isGrouped = false, counterKey=0, acc= 
   }
 
   if(!isGrouped){ // Si pas de groupage
-    acc = printCells(dataRows, columnList, counterKey, mapBody)
+    acc = printCells(dataRows, columnList, counterKey, mapBody, formulas)
   }
   else{
     dataRows.forEach((data, key) =>{
 
       //Affichage de la clé (groupe)
+      let border = counterKey === 0 ? [0,1,0,0] : [0,0,0,0]
       columnList.forEach((column, idx) => {
-        let border = counterKey === 0 ? [0,1,0,0] : [0,0,0,0]
         if(idx === counterKey)
           tempData.push({ text:  `${formatData(data[0], column)}`, style:['key'], border: border, type: get(column, 'type')})
         else
+          tempData.push({ text:  ``, style:['element'], border: border})
+      })
+      formulas.forEach((column, idx) => {
           tempData.push({ text:  ``, style:['element'], border: border})
       })
       acc.push(tempData)
@@ -92,26 +103,21 @@ function getContent(dataRows, columnList, isGrouped = false, counterKey=0, acc= 
 
       //Affichage des datas
       if(Array.isArray(data[1])){
-        data[1].forEach((x, idx) => {
-          columnList.forEach((column, idx) => {
-            if (idx > counterKey)
-              tempData.push({text: `${formatData(get(x, get(column, 'code', ''), ''), column)}`, style: ['element'], border:[0,0,0,0], type: get(column, 'type')})
-            else
-              tempData.push({text: ``, style: ['element'], border:[0,0,0,0]})
-          })
-          acc.push(tempData)
-          tempData = []
-        })
+
+        let arrays = printCells(data[1], columnList, counterKey, mapBody, formulas)
+        arrays.forEach(y => acc.push(y))
+        //acc.push(tempData)
         tempData = []
 
       }
       else{
-        getContent(_toPairs(data[1]), columnList, true, counterKey+1, acc, sumAllContent)
+        getContent(_toPairs(data[1]), columnList, true, counterKey+1, acc, sumAllContent, formulas)
       }
 
       if(columnList.some(x => x.sumData)) {
 
         //On fait la somme des data du groupe
+        let values = {}
         columnList.forEach((column, idx) => {
           let sum = 0
           if(idx === counterKey){
@@ -124,21 +130,22 @@ function getContent(dataRows, columnList, isGrouped = false, counterKey=0, acc= 
             else
               sum += getSumContent(_toPairs(data[1]), column, sum, true)
 
+            values[column.code] = sum
             tempData.push({text: `${formatData(sum, 'int4')}`, style: ['total'], border:[0,1,0,0]})
           }
-          /*else if (idx > counterKey && !isNumeric(column) ){
 
-            tempData.push({text: ``, style: ['total'], border:[0,1,0,0]})
-          }*/
           else{
             tempData.push({text: ``, style: ['total'], border:[0,1,0,0]})
           }
 
         })
+
+        evaluateExpression(formulas, values, [0,1,0,0]).forEach(x => tempData.push(x))
         acc.push(tempData)
         tempData = []
 
         //On fait les pourcentages des data du groupe
+        values = {}
         columnList.forEach((column, idx) =>   {
           let sum = 0
           if(idx === counterKey){
@@ -152,8 +159,12 @@ function getContent(dataRows, columnList, isGrouped = false, counterKey=0, acc= 
             else
               sum += getSumContent(_toPairs(data[1]), column, sum, true)
 
+            let resultSum = sumAllContent[get(column, 'code')] !== 0 ? (sum/sumAllContent[get(column, 'code')] ) : 0
+            values[column.code] = resultSum
             let percent = sumAllContent[get(column, 'code')] !== 0 ? (sum/sumAllContent[get(column, 'code')] ) * 100 : 0
             tempData.push({text: `${separatorNumber(_round(percent, 2))}%`, style: ['total'], border:[0,0,0,1]})
+
+
           }
 
           /* else if (idx > counterKey && !isNumeric(column)){
@@ -166,6 +177,8 @@ function getContent(dataRows, columnList, isGrouped = false, counterKey=0, acc= 
             tempData.push({text: ``, style: ['total'], border:[0,0,0,1]})
           }
         })
+        formulas.forEach(x => tempData.push({text : '', border:[0,0,0,1]}))
+
         acc.push(tempData)
         tempData = []
 
@@ -209,6 +222,25 @@ function getSumContent(dataRows, column, acc=0, isPair=false){
   }
 
   return acc
+}
+
+function evaluateExpression(formulas, values, border = [1,1,1,1]){
+
+  let tempData = []
+  formulas.forEach(formula =>{
+
+    //Formation des variables
+    let variables = {}
+
+    formula.variables.forEach(x => {
+      variables[get(x, 'variable')] = values[get(x, 'column.code')]
+    })
+    let parser = new Parser()
+    let expr = parser.parse(formula.expression)
+    let val = expr.evaluate(variables)
+    tempData.push({text: `${separatorNumber(_round(val, 6))}`, style: ['element'], border:border, type: 'int'})
+  })
+  return tempData
 }
 
 function sumAllContent(rows, columns){
@@ -298,20 +330,25 @@ function isNumeric(column){
 
 }
 
-function printCells(data, columnList, counterKey, mapBody =[]){
+function printCells(data, columnList, counterKey, mapBody =[], formulas=[]){
 
   let acc = []
   let tempData = []
+  let values = {}
   data.forEach((x, idx) =>{
     columnList.forEach((column, idx) => {
       if (idx > counterKey){
         mapBody.push(get(x, get(column, 'code', ''), ''))
+        values[column.code] = get(x, get(column, 'code', ''))
         let val = formatData(get(x, get(column, 'code', ''), ''), column)
         tempData.push({text: `${val}`, style: ['element'], border:[1,1,1,1], type: get(column, 'type')})
       }
       else
         tempData.push({text: ``, style: ['element'], border:[1,1,1,1]})
     })
+    evaluateExpression(formulas, values, [1,1,1,1]).forEach(x => tempData.push(x))
+
+    //console.log("tempData", tempData)
     acc.push(tempData)
     tempData = []
   })
@@ -319,10 +356,11 @@ function printCells(data, columnList, counterKey, mapBody =[]){
 
 }
 
-function printTotalG(sumAllContent, columnList, acc, isGrouped = true){
+function printTotalG(sumAllContent, columnList, acc, isGrouped = true, formulas =[]){
   //On affiche le total général
   let tempData = []
   let border = [0,1,0,0]
+  let values = {}
   if(isGrouped)
     border = [0,1,0,0]
   else
@@ -334,13 +372,18 @@ function printTotalG(sumAllContent, columnList, acc, isGrouped = true){
         tempData.push({text: `Total Général `, style: ['totalG'], border:border})
       }
       else if (idx > 0 && isNumeric(column) && column.sumData){
-        tempData.push({text: `${separatorNumber(_round(sumAllContent[get(column, 'code')], 3))}`, style: ['total'], border:border, type: get(column, 'type')})
+        values[column.code] = sumAllContent[get(column, 'code')]
+        tempData.push({text: `${separatorNumber(_round(sumAllContent[get(column, 'code')], 6))}`, style: ['total'], border:border, type: get(column, 'type')})
       }
       else{
         tempData.push({text: ``, style: ['total'], border:border})
       }
 
     })
+
+    evaluateExpression(formulas, values, border).forEach(x => tempData.push(x))
+
+
     acc.push(tempData)
   }
 
@@ -798,9 +841,9 @@ let f = function (payload) {
   let payloadData = get(payload, 'rows')
 
 
-
   let filter = (get(payload, 'filter'))
   let columns = get(filter, 'columns')
+  let formulas = get(filter, 'formulas')
   let title = get(filter, 'title')
   let groupBy = get(filter, 'groupBy', [])
   let counterKey = groupBy.length > 0 ? 0 : -1
@@ -827,7 +870,6 @@ let f = function (payload) {
     column_cross_paired = _toPairs(column_cross_grouped)
   }
 
-
   if(line_cross.length >0){
     line_cross_grouped = getDataRows(line_cross, payloadData)
     line_cross_paired = _toPairs(line_cross_grouped)
@@ -851,10 +893,10 @@ let f = function (payload) {
   }*/
   sumContent = sumAllContent(payloadData, columns)
   //let header =  getHeader(columns)
-  let header = isDynamik ? getDynamikHeader(column_cross_paired, column_cross, value_cross, columns) : getHeader(columns)
+  let header = isDynamik ? getDynamikHeader(column_cross_paired, column_cross, value_cross, columns) : getHeader(columns, formulas)
   let content = isDynamik
     ? getDynamikContent(line_cross_paired, line_cross, columns, get(header, 'dataMap', []), get(payload, 'rows'),0, value_cross)
-    : getContent(rowsArray, columns, isGrouped, counterKey, [],  sumContent)
+    : getContent(rowsArray, columns, isGrouped, counterKey, [],  sumContent, formulas)
 
   //content = getDynamikContent(line_cross_paired, line_cross, columns, get(header, 'dataMap', []), get(payload, 'rows'),0, value_cross)
 
@@ -862,7 +904,8 @@ let f = function (payload) {
   if(isDynamik)
     content.push(sumAllDynamikContent( get(payload, 'rows'), get(header, 'dataMap', []), columns, value_cross))
   else if(payloadData.length > 0)
-    content = printTotalG(sumContent, columns, content, isGrouped)
+    content = printTotalG(sumContent, columns, content, isGrouped, formulas)
+
 
   let pageSize = get(filter, 'options.pageSize', 'A4')
   let pageOrientation = get(filter, 'options.pageOrientation', 'portrait')

@@ -133,7 +133,7 @@ export default {
       this.$v.form.$touch()
       console.log(this.$v.form.$error)
       if (this.$v.form.$error) {
-        return Promise.reject(new Error('ErrorForm'))
+        return false
       }
 
       let data = this.form.variables.map(x =>{

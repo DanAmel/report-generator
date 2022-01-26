@@ -46,7 +46,7 @@
                       :index="index"
                       :validator="validator"
                       :icon-type="iconType"
-                      :available-columns="availableColumns"/>
+                      :available-columns="newFilter.columns"/>
                   </template>
                 </q-card>
               </q-item-section>
@@ -235,7 +235,7 @@ export default {
           }
           break
         case 'formula':
-          this.newFilter.formulas.push({expression: null, sumData: false})
+          this.newFilter.formulas.push({expression: null, sumData: false, variables: []})
 
           if(this.$refs.formula_report){
             setTimeout(() =>{

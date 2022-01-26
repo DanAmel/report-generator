@@ -2,12 +2,14 @@
 
   <div class="row">
 <!--    <div class="col-2"> Colonne </div>-->
-
     <div class="col-5">
       <q-input
         ref="myExpression"
         v-model="item.expression"
         class="q-ml-md"
+        @m-blur="validator.newFilter.formulas.$each[index].expression.$touch"
+        :error="validator.newFilter.formulas.$each[index].expression.$error"
+        error-message="Expression incorrecte."
         dense label="Expression" />
 
     </div>
@@ -15,10 +17,12 @@
       <q-input
         v-model="item.alias"
         class="q-ml-md"
+        @m-blur="validator.newFilter.formulas.$each[index].alias.$touch"
+        :error="validator.newFilter.formulas.$each[index].alias.$error"
         dense label="Libellé" />
     </div>
 
-    <div class="col-1"> <q-icon class="q-mx-xs q-mt-md" color="black" size="25px" :name="iconType+'exclamation-circle'" @click="addVariables" /> </div>
+    <div class="col-1"> <q-icon :aria-errormessage="validator.newFilter.formulas.$each[index].variables.$error" v-if="variables.length>0" class="q-mx-xs q-mt-md" color="black" size="25px" :name="iconType+'exclamation-circle'" @click="addVariables" /> </div>
 
     <div class="col-1"> <q-icon class="q-mx-xs q-mt-md" color="red" :name="iconType+'times'" @click="deleteColumn(items, index)" /> </div>
   </div>
@@ -59,6 +63,7 @@ export default {
 
   data(){
     return {
+      hasError: false,
       availableFilterColumns: [],
       variables: [],
       selectedAgregat: null,
@@ -93,15 +98,14 @@ export default {
     },
 
     addVariables(){
+      let data = this.availableColumns.map(x => x.column)
       this.$q.dialog({
         component: VariablesFormulaDialog,
         parent: this,
         item: this.item,
-        availableColumns: this.availableColumns.filter(x => this.isColumnNumeric(x)),
+        availableColumns: data.filter(x => this.isColumnNumeric(x) && x.sumData),
         variables: this.variables
       }).onOk(async (val) => {
-        //A faire
-        console.log('valll', val)
         this.item.variables = val
       })
     },
@@ -128,42 +132,6 @@ export default {
     displayVariable(){
     },
 
-
-    //GESTION DES AGREGATS
-    getAvailaibleAgregats(data){
-
-      let type = get(data, 'type', '')
-      let agreg = []
-      switch (type){
-        case 'float4':
-        case 'float8':
-        case 'numeric':
-        case 'int4':
-        case 'int8':
-          agreg.push({name: 'MIN', code:'min'})
-          agreg.push({name: 'MAX', code:'max'})
-          agreg.push({name: 'NOMBRE', code:'count'})
-          agreg.push({name: 'SOMME', code:'sum'})
-          agreg.push({name: 'MOYENNE', code:'avg'})
-          if(this.index === 0)
-            agreg.push({name: 'DISTINCT', code:'distinct'})
-          break
-        case 'date':
-          agreg.push({name: 'MIN', code:'min'})
-          agreg.push({name: 'MAX', code:'max'})
-          agreg.push({name: 'NOMBRE', code:'count'})
-          break
-        case 'text':
-        case 'varchar':
-          agreg.push({name: 'NOMBRE', code:'count'})
-          if(this.index === 0)
-            agreg.push({name: 'DISTINCT', code:'distinct'})
-          break
-      }
-
-      return agreg
-    },
-
     parseExpression(){
       let parser = new Parser()
       try {
@@ -172,19 +140,17 @@ export default {
         let variables = expr.variables()
 
 
+        this.variables = []
         this.variables = variables.reduce((acc, variable) => {
-          //const attribut = this.variables.find(v => v.variable === variable);
-          /*acc.push({
-            variable,
-            column: null,
-          })*/
           acc.push(variable)
 
           return acc
         },[])
+        this.hasError = false
 
       }catch (e) {
-
+        //lever une erreur
+        this.hasError = true
       }
     }
 
@@ -216,19 +182,34 @@ export default {
   mounted(){
     if(this.item){
       this.parseExpression()
-      this.selectedAgregat = get(this.item, 'column.aggregat')
     }
   },
 
   watch: {
     'item.expression'(){
       this.parseExpression()
+
+      //Suppression des index
+      let indexRemove = []
+      let variableToAdd = []
+      this.item.variables.forEach((x, i) =>{
+        let el = this.variables.find(y => y === x.variable)
+
+        if(!el){
+          indexRemove.push(i)
+        }
+
+      })
+      indexRemove.forEach(index =>{
+        this.item.variables[index].variable = null
+        this.item.variables[index].column = null
+        //this.item.variables.splice(index, 1)
+      })
+
+
     },
 
-
-
   },
-
 
 }
 </script>
