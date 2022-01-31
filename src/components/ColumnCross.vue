@@ -103,10 +103,6 @@ export default {
       this.removeItem(data, index)
     },
 
-    removeItem(data, index){
-      data.splice(index, 1)
-    },
-
     filterAvailableColumns (val, update, abort) {
       update(() => {
         const needle = val.toLowerCase()

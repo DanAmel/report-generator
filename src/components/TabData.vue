@@ -17,6 +17,7 @@
                       :items="newFilter.columns"
                       :index="index"
                       :validator="validator"
+                      v-on:removeColumn="removeColumn"
                       :icon-type="iconType"
                       :available-columns="availableColumns"/>
                   </template>
@@ -248,9 +249,32 @@ export default {
 
     },
 
-    removeItem(data, index){
-      data.splice(index, 1)
+    removeColumn(data){
+      this.deleteFormulaElements(data)
+      this.deleteGroupByElements(data)
     },
+
+    deleteFormulaElements(data){
+      get(this.newFilter, "formulas", []).forEach(x =>{
+        let elem = get(x, "variables", []).filter(y => y.column.code === get(data, "column.code"))
+        if(elem && elem.length >0){
+          x.expression = ''
+          x.variables = []
+        }
+      })
+    },
+
+    deleteGroupByElements(data){
+      get(this.newFilter, "groupBy", []).forEach((x, index) =>{
+
+        let indexToRemove = []
+        let elem = get(x, "column.code") === get(data, "column.code")
+        if(elem)
+          indexToRemove.push(index)
+
+        indexToRemove.forEach(y => this.newFilter.groupBy.splice(y, 1))
+      })
+    }
 
   },
 

@@ -916,7 +916,8 @@ let f = function (payload) {
 
   let body = []
   body.push(...get(header,'header',[]))
-  body.push(...content)
+  //body.push(...content)
+  content.forEach(x => body.push(x))
 
   let table = {
     table:{

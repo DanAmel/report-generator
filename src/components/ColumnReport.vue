@@ -55,6 +55,7 @@
 
 <script>
 import get from "lodash/get";
+import cloneDeep from "lodash/cloneDeep"
 
 export default {
   name: "ColumnReport",
@@ -101,6 +102,8 @@ export default {
       if(this.item.column){
         this.availableColumns.push(this.item.column)
       }
+      this.$emit('removeColumn', cloneDeep(data[index]))
+
       this.removeItem(data, index)
     },
     removeItem(data, index){

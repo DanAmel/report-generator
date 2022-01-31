@@ -9,7 +9,7 @@ export function install(Vue) {
     install.installed = true;
 
     Vue.component('Generator', Generator);
-    Vue.component('Vuelidate', Vuelidate);
+    Vue.use(Vuelidate)
 }
 
 // Création du module à destination Vue.use(...)

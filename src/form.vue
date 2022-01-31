@@ -1,9 +1,9 @@
 <template xmlns:v-slot="http://www.w3.org/1999/XSL/Transform">
     <PageContainer :titles="titles">
-      <template slot="header">
+      <template v-slot:header>
       </template>
 
-      <template slot="content">
+      <template v-slot:content>
 
 
         <div class="row q-ma-md q-pa-md" style="border: lightgray solid thin; background-color: white">
@@ -158,7 +158,7 @@ export default {
     ]
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     if (this.content)
       window.URL.revokeObjectURL(this.content)
   }

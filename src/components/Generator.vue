@@ -145,6 +145,7 @@
 
 import {mapActions, mapState} from "vuex";
 import get from "lodash/get";
+import cloneDeep from "lodash/cloneDeep"
 import assign from "lodash/assign"
 import moment from "moment";
 import pdfMake from 'pdfmake/build/pdfmake'
@@ -384,7 +385,7 @@ export default {
       payload.start_date = this.datesRange.from ? moment(this.datesRange.from).format("DD/MM/YYYY") : moment(this.datesRange).format("DD/MM/YYYY")
       payload.end_date = this.datesRange.to ? moment(this.datesRange.to).format("DD/MM/YYYY") : moment(this.datesRange).format("DD/MM/YYYY")
 
-      payload.periode = this.getLibelleDate(payload.start_date, payload.end_date,  _.get(payload, "filter.operand_date.code", "between"))
+      payload.periode = this.getLibelleDate(payload.start_date, payload.end_date,  get(payload, "filter.operand_date.code", "between"))
 
 
       //payload.campaign = this.currentCampaign
@@ -413,14 +414,14 @@ export default {
 
     downloadExcelFile(value) {
      let content = dataGeneretor(value)
-      //console.log("content", _.cloneDeep(content))
+      //console.log("content", cloneDeep(content))
       let contentDefinition = {
        title: content.title,
         logo: this.logo,
         data: get(content, 'table.table.body')
       }
-      console.log("contentDefinition", _.cloneDeep(contentDefinition))
-      let tempContent =  _.cloneDeep(contentDefinition)
+      console.log("contentDefinition", cloneDeep(contentDefinition))
+      let tempContent =  cloneDeep(contentDefinition)
       const exporter = new ExcelConverter(contentDefinition.title, tempContent);
       exporter.downloadExcel();
     },
@@ -673,7 +674,7 @@ export default {
     }
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     if (this.content)
       window.URL.revokeObjectURL(this.content)
   }

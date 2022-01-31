@@ -172,6 +172,15 @@ export default {
     }),
   },
 
+  watch: {
+    'availableColumns': {
+       handler: function (val, oldVal) {
+         console.log('availableColumns change ')
+       },
+       deep: true,
+     },
+  },
+
 
   beforeMount() {
     this.setForm()

@@ -22,7 +22,15 @@
         dense label="Libellé" />
     </div>
 
-    <div class="col-1"> <q-icon :aria-errormessage="validator.newFilter.formulas.$each[index].variables.$error" v-if="variables.length>0" class="q-mx-xs q-mt-md" color="black" size="25px" :name="iconType+'exclamation-circle'" @click="addVariables" /> </div>
+    <div class="col-1">
+
+      <q-icon
+      :aria-errormessage="validator.newFilter.formulas.$each[index].variables.$error" v-if="variables.length>0" class="q-mx-xs q-mt-md" color="black" size="25px" :name="iconType+'exclamation-circle'" @click="addVariables" >
+        <q-tooltip>
+          Cliquez ici pour lier les variables de votre formule
+        </q-tooltip>
+      </q-icon>
+    </div>
 
     <div class="col-1"> <q-icon class="q-mx-xs q-mt-md" color="red" :name="iconType+'times'" @click="deleteColumn(items, index)" /> </div>
   </div>
