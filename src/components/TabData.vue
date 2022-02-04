@@ -83,7 +83,7 @@
         </div>
       </div>
 
-      <div class="row no-wrap q-pa-md">
+      <div class="row no-wrap q-pa-md" v-if="!newFilter.isChart">
         <div class="col-md-12">
           <q-btn size="sm" flat @click="add('groupBy')" class="text-green" :icon="iconType+'plus'"> Ajouter un groupe</q-btn>
           <q-list dense bordered padding v-if="get(newFilter, 'groupBy', []).length >0">
@@ -217,7 +217,7 @@ export default {
           break
         case 'groupBy':
           //this.newFilter.groupBy.unshift({column: null, name: null, sumData: false})
-          this.newFilter.groupBy.push({column: null, name: null, sumData: false})
+          this.newFilter.groupBy.push({column: null, name: null, sumData: false, use_variable: false, attribut: null, column_attribut: null})
           if(this.$refs.group_by_report){
             setTimeout(() =>{
               let index = this.$refs.group_by_report.length - 1

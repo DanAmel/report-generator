@@ -91,6 +91,15 @@
 
               <div class="row no-wrap q-pa-md">
 
+                <q-toggle
+                  v-model="newFilter.isChart"
+                  @input="onModeChange"
+                  label="Activer le mode graphique" />
+
+              </div>
+
+              <div class="row no-wrap q-pa-md" v-if="!newFilter.isChart">
+
                 <div class="col-6">
 
                   <q-select  dense outlined class="q-mr-md" clearable
@@ -125,9 +134,6 @@
 
               </div>
 
-              <div class="row no-wrap q-pa-md">
-
-              </div>
 
               <q-tabs
                 v-model="tab"
@@ -138,8 +144,9 @@
                 inline-label
                 align="justify"
                 narrow-indicator>
-                <q-tab name="tab-data" label="Source de Données" />
-                <q-tab name="tab-cross" label="Tableau croisé dynamique" />
+                <q-tab name="tab-chart" label="Graphique" v-if="newFilter.isChart" />
+                <q-tab name="tab-data" label="Source de Données"  />
+                <q-tab name="tab-cross" label="Tableau croisé dynamique" v-if="!newFilter.isChart"  />
               </q-tabs>
 
               <q-separator />
@@ -153,13 +160,21 @@
                   />
                 </q-tab-panel>
 
-                <q-tab-panel name="tab-cross">
-
+                <q-tab-panel name="tab-cross" v-if="!newFilter.isChart">
                   <TabCross
                     :newFilter="newFilter"
                     :columns="columns"
                     :validator="$v" />
                 </q-tab-panel>
+
+                <q-tab-panel name="tab-chart" v-if="newFilter.isChart">
+                  <TabChart
+                    :newFilter="newFilter"
+                    :chart="newFilter.chart"
+                    :columns="columns"
+                    :validator="$v" />
+                </q-tab-panel>
+
 
               </q-tab-panels>
 
@@ -239,7 +254,8 @@ export default {
   name: 'ReportForm',
   components: {
     TabData: () => import('./TabData'),
-    TabCross: () => import('./TabCross')
+    TabCross: () => import('./TabCross'),
+    TabChart: () => import('./TabChart')
   },
   model: {
     prop: 'value',
@@ -323,6 +339,7 @@ export default {
       ],
       newFilter:  {
           isValid: false,
+          isChart: false,
           title: null,
           dateReport: null,
           operand_date: null,
@@ -396,6 +413,7 @@ export default {
           condition: {required},
           column: {required},
           operand: {required},
+          column_attribut: {required},
           //value: {required}
         }
       },
@@ -430,11 +448,53 @@ export default {
         }
       },
 
+      chart: {
+        chartComplexity: {
+          required: requiredIf(function(model){
+            return this.newFilter.isChart
+          })
+        },
+        chartType:  {
+          required: requiredIf(function(model){
+            return this.newFilter.isChart
+          })
+        },
+        xaxisname:  {
+          required: requiredIf(function(model){
+            return this.newFilter.isChart
+          })
+        },
+        yaxisname:  {
+          required: requiredIf(function(model){
+            return this.newFilter.isChart
+          })
+        },
+        series:  {
+          required: requiredIf(function(model){
+            return this.newFilter.isChart
+          })
+        },
+        category:  {
+          required: requiredIf(function(model){
+            return this.newFilter.isChart
+          })
+        },
+
+
+      }
+
     }
   },
 
   methods: {
     get,
+
+    onModeChange(value){
+      if(value)
+        this.tab = 'tab-chart'
+      else
+        this.tab = 'tab-data'
+    },
 
     hide(evt){
       this.$refs.dialog.hide()
@@ -539,6 +599,12 @@ export default {
       let value_cross = []
       let formulas = []
       let options = {}
+      let chart = {
+        xaxisname: null,
+        yaxisname: null,
+        chartComplexity: null,
+        chartType: null,
+      }
       this.newFilter.isValid = !this.$v.$invalid
       this.newFilter.table = get(this.mReport,'table_name')
 
@@ -549,7 +615,8 @@ export default {
       })
 
       conditions = this.newFilter.conditions.map(x => {
-        return  {condition: get(x, 'condition.code'), name: get(x, 'column.code'), operand: get(x, 'operand.code'), value: get(x, 'value') }
+        return  {condition: get(x, 'condition.code'), name: get(x, 'column.code'), operand: get(x, 'operand.code'),
+          value: get(x, 'value'), attribut: get(x, 'column_attribut.code'), use_variable: get(x, 'use_variable') }
       })
       groupBy = this.newFilter.groupBy.map(x =>{
         return {column: get(x, 'column.code'), sumData: get(x, 'sumData')}
@@ -577,6 +644,18 @@ export default {
         return  {expression: get(x, 'expression'), alias: get(x,'alias'), sumData: get(x, 'sumData') , variables: get(x, 'variables')}
       })
 
+      //console.log("this.newFilter.chart", this.newFilter.chart)
+      chart.xaxisname = get(this.newFilter, 'chart.xaxisname')
+      chart.yaxisname = get(this.newFilter, 'chart.yaxisname')
+      chart.subcaption = get(this.newFilter, 'chart.subcaption')
+      chart.numberprefix = get(this.newFilter, 'chart.numberprefix')
+      chart.numbersuffix = get(this.newFilter, 'chart.numbersuffix')
+      chart.chartComplexity = get(this.newFilter, 'chart.chartComplexity')
+      chart.category = get(this.newFilter, 'chart.category')
+      chart.series = get(this.newFilter, 'chart.series')
+      chart.valuesSeries = get(this.newFilter, 'chart.valuesSeries')
+      chart.chartType = get(this.newFilter, 'chart.chartType')
+
       return {
           id: get(this.newFilter, 'id'),
           table: get(this.mReport,'table_name'),
@@ -586,6 +665,7 @@ export default {
           app_code: get(this.mReport, 'app_code'),
           app_notice: this.appNotice,
           is_all: this.is_all,
+          isChart: get(this.newFilter, 'isChart'),
           columns: columns,
           conditions: conditions,
           groupBy: groupBy,
@@ -594,6 +674,7 @@ export default {
           line_cross: line_cross,
           value_cross: value_cross,
           formulas: formulas,
+          chart,
           options: options
       }
     },
@@ -626,7 +707,7 @@ export default {
     async submit(){
 
       this.$v.$touch()
-      console.log("this.$v", this.$v)
+
       if (this.$v.$invalid) {
         //this.Motify('error', 'Vérifiez si tous les champs sont correctement remplis!')
         this.showNotification({type: false,  message: 'Vérifiez si tous les champs sont correctement remplis!'})
@@ -686,10 +767,14 @@ export default {
       this.mReport = this.reportList.find(x => get(x,'table_name') === get(this.newFilter,'table'))
       let temp = this.dateColumns.find(x => x.code === get(this.newFilter,'column_date'))
       //this.newFilter.dateReport = temp ? temp : null
+     // this.newFilter.chart = {}
 
       this.newFilter = {...this.newFilter, dateReport: temp ? temp : null}
 
       this.is_all = get(this.newFilter,'is_all')
+      //this.newFilter.isChart = this.newFilter.isChart ? this.newFilter.isChart : false
+      if(this.newFilter.isChart)
+        this.tab = "tab-chart"
 
       this.newFilter.columns = get(this.newFilter, 'columns', []).map(x => {
         return {
@@ -710,8 +795,10 @@ export default {
 
         return {
           column: this.columns.find(y => y.code === get(x, 'name')),
+          column_attribut: this.columns.find(y => y.code === get(x, 'attribut')),
           condition: this.conditionList.find(y => y.code === get(x, 'condition')),
           operand: this.operandList.find(y => y.code === get(x, 'operand')),
+          use_variable: x.use_variable,
           value: get(x, 'value')
         }
       })
@@ -791,11 +878,22 @@ export default {
         }
       })
 
+      this.newFilter.isChart = get(this.newFilter, "isChart")
+      this.newFilter.chart.xaxisname = get(this.newFilter, "chart.xaxisname")
+      this.newFilter.chart.yaxisname = get(this.newFilter, "chart.yaxisname")
+      this.newFilter.chart.chartComplexity = get(this.newFilter, "chart.chartComplexity")
+      this.newFilter.chart.chartType = get(this.newFilter, "chart.chartType")
+      this.newFilter.chart.category = get(this.newFilter, "chart.category")
+      this.newFilter.chart.series = get(this.newFilter, "chart.series")
+      this.newFilter.chart.valuesSeries = get(this.newFilter, "chart.valuesSeries")
+
 
 
       //Les options
       this.pageSizeSelected = this.pageSizeList.find(x => x.code === get(this.newFilter, 'options.pageSize', 'A4'))
       this.pageOrientationSelected = this.pageOrientationList.find(x => x.code === get(this.newFilter, 'options.pageOrientation', 'portrait'))
+
+
     },
 
   },

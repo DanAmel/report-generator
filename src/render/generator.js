@@ -238,6 +238,7 @@ function evaluateExpression(formulas, values, border = [1,1,1,1]){
     let parser = new Parser()
     let expr = parser.parse(formula.expression)
     let val = expr.evaluate(variables)
+    val = isNaN(val) ? 0 : val
     tempData.push({text: `${separatorNumber(_round(val, 6))}`, style: ['element'], border:border, type: 'int'})
   })
   return tempData

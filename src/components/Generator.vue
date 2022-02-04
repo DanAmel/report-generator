@@ -123,7 +123,7 @@
 
       <div class="col-12 ">
 
-        <div slot="content" style="background-color: white; height:1000px" id="iframeContainer">
+        <div slot="content" style="background-color: white; height:1000px" id="iframeContainer" v-if="filter && !filter.isChart">
           <div class="row items-center justify-center ">
           </div>
 
@@ -133,6 +133,19 @@
 
           <!--          <pdf height="1000px"
                          :url="content"></pdf>-->
+        </div>
+
+
+        <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6" v-if="filter && filter.isChart">
+          <q-card bordered class="q-ma-sm " flat >
+
+            <fuse-chart
+              :dataSource="chartDefinition.dataSource"
+              :dataFormat="chartDefinition.dataFormat"
+              :type="chartDefinition.type"
+              height="500"
+            />
+          </q-card>
         </div>
 
       </div>
@@ -153,8 +166,10 @@ import pdfFonts from 'pdfmake/build/vfs_fonts'
 pdfMake.vfs = pdfFonts.pdfMake.vfs
 
 import ReportForm from "./ReportForm";
+import FuseChart from "./FuseChart";
 import RenderReport from "../render/render.js"
 import dataGeneretor from "../render/generator"
+import chartGeneretor from "../render/chart"
 import {ExcelConverter} from 'pdfmake-to-excel';
 //import RenderReport from "../render/generator"
 
@@ -163,7 +178,7 @@ export default {
 
   name: "GeneratorIndex",
   // eslint-disable-next-line vue/no-unused-components
-  components: {ReportForm},
+  components: {ReportForm, FuseChart},
 
   async preFetch({store, currentRoute, previousRoute, redirect, ssrContext}) {
     let id = this.currentId
@@ -301,6 +316,10 @@ export default {
         to: null,
       },
       filter:null,
+      chartDefinition: {
+        dataFormat: "json",
+        dataSource: {},
+      },
       /*filter: {
         id: null,
         column_date: '',
@@ -351,6 +370,7 @@ export default {
       mFilter.dateReport = {}
       mFilter.table = get(reportPdf, 'report_table')
       mFilter.title = get(reportPdf, 'report_title')
+      mFilter.isChart = get(reportPdf, 'payload_query.isChart') ? true : false
       mFilter.operand_date = get(reportPdf, 'payload_query.operand_date')
       mFilter.columns = get(reportPdf, 'payload_query.columns')
       mFilter.formulas = get(reportPdf, 'payload_query.formulas')
@@ -360,6 +380,7 @@ export default {
       mFilter.column_cross = get(reportPdf, 'payload_query.column_cross')
       mFilter.line_cross = get(reportPdf, 'payload_query.line_cross')
       mFilter.value_cross = get(reportPdf, 'payload_query.value_cross')
+      mFilter.chart = get(reportPdf, 'payload_query.chart', {})
       mFilter.options = get(reportPdf, 'payload_query.options')
       mFilter.is_all = get(reportPdf, 'payload_query.is_all')
       mFilter.apply_filter = get(reportPdf, 'payload_query.filterBy') ? true : false
@@ -369,13 +390,14 @@ export default {
       mFilter.app_notice = get(reportPdf, 'app_notice')
       mFilter.options = get(reportPdf, 'payload_query.options')
 
+      console.log("mFilter", mFilter)
       return mFilter
     },
 
     ...mapActions({
     }),
 
-    //Appel des fonction d'affichage du PDF
+    //Appel des fonctions d'affichage du PDF
     async setupPdf(payload) {
 
       this.loading = true
@@ -424,6 +446,22 @@ export default {
       let tempContent =  cloneDeep(contentDefinition)
       const exporter = new ExcelConverter(contentDefinition.title, tempContent);
       exporter.downloadExcel();
+    },
+
+    //Appel des fonctions pour la génération de graphiques
+    async setupChart(payload) {
+
+      this.loading = true
+
+      let chartDefinition = chartGeneretor(payload)
+
+      this.chartDefinition = {
+        dataSource: chartDefinition.dataSource,
+        type: chartDefinition.type,
+      }
+
+      console.log('chartDefinition', chartDefinition)
+      console.log('this.chartDefinition', this.chartDefinition)
     },
 
     showNotification(notification) {
@@ -479,8 +517,14 @@ export default {
         .then(value => {
           //console.log('value', value)
           //console.log('this.statsData', value)
-          if(type === "PDF")
-            this.setupPdf(value)
+          if(type === "PDF"){
+            if(!this.filter.isChart)
+              this.setupPdf(value)
+            else
+              this.setupChart(value)
+
+          }
+
           else
             this.downloadExcelFile(value)
 
@@ -576,7 +620,6 @@ export default {
         resolve(base64data)
       })
     },
-
 
     getLibelleDate(start_date, end_date, operand){
       let libelle = ''
@@ -674,7 +717,7 @@ export default {
     }
   },
 
-  beforeUnmount() {
+  beforeDestroy() {
     if (this.content)
       window.URL.revokeObjectURL(this.content)
   }

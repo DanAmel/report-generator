@@ -2,7 +2,7 @@
 
   <div class="row">
 
-    <div class="col-2"> <q-select  dense outlined class="q-mr-md"
+    <div class="col-1"> <q-select  dense outlined class="q-mr-md"
                                    label=""
                                    v-model="item.condition"
                                    :options="conditions"
@@ -31,7 +31,8 @@
       > </q-select>
 
     </div>
-    <div class="col-3"> <q-select  dense outlined class="q-mr-md"
+
+    <div class="col-2"> <q-select  dense outlined class="q-mr-md q-mb-lg"
                                    clearable :clear-icon="iconType+'times'"
                                    label="Opérande"
                                    v-model="item.operand"
@@ -45,11 +46,16 @@
 
     > </q-select>
     </div>
-    <div class="col-2">
-      <q-input v-if="!hasData"  v-model="item.value" :type="getInputValue" dense label="Valeur"
-               :readonly="isOperandNull"
+    <div class="col-1">
+      <q-checkbox  class="q-mt-lg" dense v-model="item.use_variable" label="" left-label >
+        <q-tooltip>Colonne </q-tooltip>
+      </q-checkbox>
+    </div>
+    <div class="col-3">
 
-      >
+      <span v-if="!item.use_variable">
+        <q-input v-if="!hasData"  v-model="item.value" :type="getInputValue" dense label="Valeur"
+                 :readonly="isOperandNull">
 
         <template v-if="isDate" v-slot:append>
           <q-icon name="event" class="cursor-pointer">
@@ -65,16 +71,36 @@
 
       </q-input>
 
-      <q-select v-if="hasData"  dense  class="q-mr-md"
-                 label="Valeur"
-                 v-model="dataItem"
-                 :options="get(item,'column.data', [])"
-                 :hide-bottom-space="true"
-                 option-label="name" option-value="code"
-                 :options-dense="true"
-                 :readonly="isOperandNull"
-                 @input="onChangeDataInput"
+        <q-select v-if="hasData"  dense  class="q-mr-md"
+                label="Valeur"
+                v-model="dataItem"
+                :options="get(item,'column.data', [])"
+                :hide-bottom-space="true"
+                option-label="name" option-value="code"
+                :options-dense="true"
+                :readonly="isOperandNull"
+                @input="onChangeDataInput"
       > </q-select>
+      </span>
+
+      <span v-if="item.use_variable">
+        <q-select  dense outlined class="q-mr-md"
+                   clearable :clear-icon="iconType+'times'"
+                   label=""
+                   ref="mySelect"
+                   v-model="item.column_attribut"
+                   :options="availableFilterColumns"
+                   :hide-bottom-space="true"
+                   option-label="name" option-value="code"
+                   :options-dense="true"
+                   use-input input-debounce="0"
+                   @filter="filterAvailableColumns"
+                   @m-blur="validator.newFilter.conditions.$each[index].column_attribut.$touch"
+                   :error="validator.newFilter.conditions.$each[index].column_attribut.$error"
+                   @input="resetByColumn"
+
+        />
+      </span>
     </div>
     <div class="col-1 justify-center"> <q-icon class="q-mx-xs q-mt-md" color="red" :name="iconType+'times'" @click="removeItem(items, index)" /> </div>
   </div>
