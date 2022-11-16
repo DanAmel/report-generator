@@ -1,10 +1,9 @@
 {
-  "name": "report-generator",
-  "version": "1.7.8",
+  "name": "@sfp-group/pdf-report-generator",
+  "version": "1.8.0",
   "description": "Generator Reports",
   "productName": "Generator Report",
   "author": "Daniel AMELINA <daniel.amelina@benincontrol.com>",
-  "private": true,
   "scripts": {
     "lint": "eslint --ext .js,.vue ./",
     "format": "prettier --write \"**/*.{js,vue,css,html,md,json}\" --ignore-path .gitignore",
@@ -14,15 +13,11 @@
     "@quasar/extras": "^1.0.0",
     "lodash": "^4.17.11",
     "moment": "^2.29.1",
-    "pdfmake": "^0.1.70",
     "vue-i18n": "^8.0.0",
     "vue-instant-pdf-viewer": "^1.0.2",
-    "vue-json-excel": "^0.3.0",
-    "vuedraggable": "^2.24.1",
     "vuelidate": "^0.7.6",
-    "pdfmake-to-excel": "^1.1.39",
     "expr-eval": "^2.0.2",
-    "vuex": "latest"
+    "simple-code-editor": "^1.2.2"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.13.14",
@@ -48,5 +43,20 @@
     "node": ">= 12.22.1",
     "npm": ">= 6.13.4",
     "yarn": ">= 1.21.1"
-  }
+  },
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DanAmel/report-generator.git"
+  },
+  "keywords": [
+    "builder",
+    "reports",
+    "quasarjs"
+  ],
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DanAmel/report-generator/issues"
+  },
+  "homepage": "https://github.com/DanAmel/report-generator#readme"
 }

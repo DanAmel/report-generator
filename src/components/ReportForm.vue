@@ -1070,7 +1070,7 @@ export default {
       if (this.newFilter.isChart)
         this.tab = "tab-chart"
 
-      console.log("this.newFilter", this.newFilter)
+     // console.log("this.newFilter", this.newFilter)
 
       //Les options
       this.pageSizeSelected = this.pageSizeList.find(x => x.code === get(this.newFilter, 'options.pageSize', 'A4'))
@@ -1138,7 +1138,7 @@ export default {
 
       let data = this.generateFilter()
       data.isValid = !this.$v.$invalid
-      console.log("datadata", data)
+      //console.log("datadata", data)
       this.$emit('input', clone(data))
       return data
     },

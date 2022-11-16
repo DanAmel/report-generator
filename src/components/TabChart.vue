@@ -6,15 +6,15 @@
 
       <div class="row no-wrap q-pa-md">
         <div class="col-md-6">
-          <q-input  class="q-mr-md" dense label="Label axe X *" v-model="newFilter?.chart.xaxisname"
-                    @m-blur="validator.newFilter?.chart.xaxisname.$touch"
-                    :error="validator.newFilter?.chart.xaxisname.$error"
+          <q-input  class="q-mr-md" dense label="Label axe X *" v-model="newFilter.chart.xaxisname"
+                    @m-blur="validator.newFilter.chart.xaxisname.$touch"
+                    :error="validator.newFilter.chart.xaxisname.$error"
           />
         </div>
         <div class="col-md-6">
           <q-input  class="q-mr-md" dense label="Label axe Y *" v-model="newFilter.chart.yaxisname"
-                    @m-blur="validator.newFilter?.chart.yaxisname.$touch"
-                    :error="validator.newFilter?.chart.yaxisname.$error"
+                    @m-blur="validator.newFilter.chart.yaxisname.$touch"
+                    :error="validator.newFilter.chart.yaxisname.$error"
           />
         </div>
       </div>

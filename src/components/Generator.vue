@@ -462,7 +462,7 @@ export default {
     async setupChart(payload) {
 
       this.loading = true
-      console.log("payload", payload)
+      //console.log("payload", payload)
 
       let chartDefinition = chartGeneretor(payload)
 
@@ -552,7 +552,7 @@ export default {
       form = assign(form, params)
 
 
-      console.log("this.filter.isChart", this.filter.isChart)
+      //console.log("this.filter.isChart", this.filter.isChart)
       if(this.filter.isChart){ //Affichage des graphes
         this.$store.dispatch(this.getDataReportApi, form)
           .then(value => {
