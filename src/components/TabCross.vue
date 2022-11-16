@@ -17,6 +17,7 @@
                       :items="newFilter.column_cross"
                       :index="index"
                       :validator="validator"
+                      :icon-type="iconType"
                       :available-columns="availableColumns"/>
                   </template>
                 </q-card>
@@ -43,6 +44,7 @@
                     :items="newFilter.line_cross"
                     :index="index"
                     :validator="validator"
+                    :icon-type="iconType"
                     :available-columns="availableColumns"/>
                 </template>
               </q-card>
@@ -69,6 +71,7 @@
                     :items="newFilter.value_cross"
                     :index="index"
                     :validator="validator"
+                    :icon-type="iconType"
                     :available-columns="availableColumns"/>
                 </template>
               </q-card>

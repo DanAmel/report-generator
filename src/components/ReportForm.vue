@@ -25,13 +25,13 @@
             <q-bar>
               <q-space/>
 
-              <q-btn dense flat icon="minimize" @click="maximizedToggle = false" :disable="!maximizedToggle">
+              <q-btn dense flat :icon="iconType+'minus'" @click="maximizedToggle = false" :disable="!maximizedToggle">
                 <q-tooltip v-if="maximizedToggle" class="bg-white text-primary">Reduire</q-tooltip>
               </q-btn>
-              <q-btn dense flat icon="crop_square" @click="maximizedToggle = true" :disable="maximizedToggle">
+              <q-btn dense flat :icon="iconType+'stop'" @click="maximizedToggle = true" :disable="maximizedToggle">
                 <q-tooltip v-if="!maximizedToggle" class="bg-white text-primary">Maximiser</q-tooltip>
               </q-btn>
-              <q-btn dense flat icon="close" v-close-popup>
+              <q-btn dense flat :icon="iconType+'close'" v-close-popup>
                 <q-tooltip class="bg-white text-primary">Fermer</q-tooltip>
               </q-btn>
             </q-bar>
@@ -43,6 +43,7 @@
                 Chargement en cours...
                 <q-tooltip :offset="[0, 8]">Veuillez patienter . . .</q-tooltip>
               </div>
+
 
               <div class="row no-wrap q-pa-md">
 
@@ -204,6 +205,7 @@
               </q-tabs>
 
               <q-separator/>
+
               <q-tab-panels v-model="tab" animated>
 
                 <q-tab-panel name="tab-data">
@@ -211,6 +213,7 @@
                       :newFilter="newFilter"
                       :columns="columns"
                       :validator="$v"
+                      :icon-type="iconType"
                       :isRequestMode="isRequestMode"
                   />
                 </q-tab-panel>
@@ -219,6 +222,7 @@
                   <TabCross
                       :newFilter="newFilter"
                       :columns="columns"
+                      :icon-type="iconType"
                       :validator="$v"/>
                 </q-tab-panel>
 
@@ -227,6 +231,7 @@
                       :newFilter="newFilter"
                       :chart="newFilter.chart"
                       :columns="columns"
+                      :icon-type="iconType"
                       :validator="$v"/>
                 </q-tab-panel>
 
