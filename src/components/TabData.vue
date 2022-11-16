@@ -17,6 +17,7 @@
                       :items="newFilter.columns"
                       :index="index"
                       :validator="validator"
+                      :isRequestMode = "isRequestMode"
                       v-on:removeColumn="removeColumn"
                       :icon-type="iconType"
                       :available-columns="availableColumns"/>
@@ -174,6 +175,10 @@ export default {
     iconType: {
       type: String,
       default: 'fa fa-',
+    },
+    isRequestMode: {
+      type: Boolean,
+      default: false,
     },
 
   },

@@ -7,7 +7,7 @@
       <q-select  dense outlined class="q-mr-md" clearable
                  ref="mySelect"
          v-model="item.column"
-         label="Choisir une colonne"
+         label="Choisir un champ"
          :options="availableFilterColumns"
          :hide-bottom-space="true"
          option-label="name" option-value="code"
@@ -51,6 +51,7 @@
 
 <script>
 import get from "lodash/get";
+import orderBy from "lodash/orderBy"
 
 export default {
   name: "ColumnCross",
@@ -107,7 +108,7 @@ export default {
     filterAvailableColumns (val, update, abort) {
       update(() => {
         const needle = val.toLowerCase()
-        this.availableFilterColumns = this.availableColumns.filter(v => v.name && v.name.toLowerCase().indexOf(needle) > -1)
+        this.availableFilterColumns = orderBy(this.availableColumns.filter(v => v.name && v.name.toLowerCase().indexOf(needle) > -1), 'name', 'ASC')
       })
     },
 

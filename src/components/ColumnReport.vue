@@ -10,7 +10,7 @@
                  :options="availableFilterColumns"
                  :hide-bottom-space="true"
                  option-label="name" option-value="code"
-                 :options-dense="true"
+                 :options-dense="true" use-chips
                  use-input input-debounce="0"
                  @m-blur="validator.newFilter.columns.$each[index].column.$touch"
                  :error="validator.newFilter.columns.$each[index].column.$error"
@@ -30,6 +30,7 @@
     <div class="col-2 justify-start">
       <!--                                {{item.column}}-->
       <q-select  dense outlined class="" clearable
+
                  v-model="selectedAgregat"
                  label="Aggrégat"
                  :options="getAvailaibleAgregats(item.column)"
@@ -56,6 +57,7 @@
 <script>
 import get from "lodash/get";
 import cloneDeep from "lodash/cloneDeep"
+import orderBy from "lodash/orderBy"
 
 export default {
   name: "ColumnReport",
@@ -78,6 +80,10 @@ export default {
     iconType: {
       type: String,
       default: 'fa fa-',
+    },
+    isRequestMode: {
+      type: Boolean,
+      default: false,
     },
   },
 
@@ -113,7 +119,7 @@ export default {
     filterAvailableColumns (val, update, abort) {
       update(() => {
         const needle = val.toLowerCase()
-        this.availableFilterColumns = this.availableColumns.filter(v => get(v, 'name', '').toLowerCase().indexOf(needle) > -1)
+        this.availableFilterColumns = orderBy(this.availableColumns.filter(v => get(v, 'name', '').toLowerCase().indexOf(needle) > -1), 'name', 'ASC')
       })
     },
 

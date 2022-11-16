@@ -1,5 +1,5 @@
 <template>
-  <q-page class="flex flex-block">
+  <q-page class="flex-block">
     <div class="row full-width">
       <div class="col-xs-12">
 
@@ -9,7 +9,7 @@
               <q-breadcrumbs class="text-subtitle text-weight-medium" active-color="primary"
                              color="breadcrumb-inactive"
                              separator="/">
-                <div slot="separator" slot-scope="props" style="font-size: medium">/</div>
+                <div slot="separator"  style="font-size: medium">/</div>
                 <q-breadcrumbs-el
                   class="text-body"
                   style="font-size: 17px"
@@ -22,8 +22,10 @@
               </q-breadcrumbs>
             </q-toolbar-title>
 
+
             <ReportForm
-              v-show="true"
+              v-if="loadingComponent"
+              v-show="canCreate"
               ref="ReportForm"
               v-model="filter"
               :icon-type="iconType"
@@ -33,10 +35,13 @@
               :filter-datas="filterDatas"
               :create-report-api="createReportApi"
               :update-report-api="updateReportApi"
+              :check-sql-api="checkSqlApi"
               :app-notice="appNotice"
               :return-url="updateReportApi"
+              :request-params="params"
               :can-create="canCreate"
               :can-update="canUpdate"
+              :can-edit-request="canEditRequest"
               v-on:reloadPage="reloadPage"
               v-on:showPreview="getStatsData('PDF')"
               v-on:showNotification="showNotification"
@@ -67,7 +72,7 @@
         <q-tooltip :offset="[0, 8]">Chargement du rapport en cours . . .</q-tooltip>
       </div>
 
-      <div class="col-12 q-pb-xs q-pt-xs  q-mt-xs q-mb-xs">
+      <div class="col-12 q-pb-xs q-pt-xs q-mt-xs q-mb-xs">
 
         <q-btn
           color="green" class="q-ml-sm"
@@ -106,7 +111,6 @@
 
 
 
-
         <q-btn-group flat push class="float-right on-left">
 
           <q-btn push label="Brouillon" size="sm"
@@ -123,20 +127,17 @@
 
       <div class="col-12 ">
 
-        <div slot="content" style="background-color: white; height:1000px" id="iframeContainer" v-if="filter && !filter.isChart">
+        <div slot="content"  id="iframeContainer" v-if="filter && !filter.isChart">
           <div class="row items-center justify-center ">
           </div>
 
+          <object width="100%" style="height: calc(100vh - 180px)" ref="pdfv" :data="content"></object>
+          <object ref="pdfv2" :data="content_xls"></object>
 
-          <!--          <div ref="pdfv"></div>-->
-          <object width="100%" height="1000px" ref="pdfv" :data="content"></object>
-
-          <!--          <pdf height="1000px"
-                         :url="content"></pdf>-->
         </div>
 
 
-        <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6" v-if="filter && filter.isChart">
+        <div  style="background-color: white;" v-if="filter && filter.isChart">
           <q-card bordered class="q-ma-sm " flat >
 
             <fuse-chart
@@ -158,27 +159,38 @@
 
 import {mapActions, mapState} from "vuex";
 import get from "lodash/get";
-import cloneDeep from "lodash/cloneDeep"
+import omit from "lodash/omit"
 import assign from "lodash/assign"
 import moment from "moment";
-import pdfMake from 'pdfmake/build/pdfmake'
-import pdfFonts from 'pdfmake/build/vfs_fonts'
-pdfMake.vfs = pdfFonts.pdfMake.vfs
 
-import ReportForm from "./ReportForm";
-import FuseChart from "./FuseChart";
-import RenderReport from "../render/render.js"
-import dataGeneretor from "../render/generator"
 import chartGeneretor from "../render/chart"
-import {ExcelConverter} from 'pdfmake-to-excel';
-//import RenderReport from "../render/generator"
+import myLoadingComponent from "./loading"
+import myErrorComponent from "./error"
+
+const ReportForm = () => ({
+  // The component to load (should be a Promise)
+  component: import('./ReportForm'),
+  // A component to use while the async component is loading
+  loading: myLoadingComponent,
+  // A component to use if the load fails
+   error: myErrorComponent,
+  // Delay before showing the loading component. Default: 200ms.
+  delay: 10,
+  // The error component will be displayed if a timeout is
+  // provided and exceeded. Default: Infinity.
+  timeout: 1000 * 60 * 3
+})
 
 
 export default {
 
   name: "GeneratorIndex",
   // eslint-disable-next-line vue/no-unused-components
-  components: {ReportForm, FuseChart},
+  components: {
+    //ReportForm: () => import('./ReportForm'),
+    ReportForm,
+    FuseChart: () => import('./FuseChart')
+  },
 
   async preFetch({store, currentRoute, previousRoute, redirect, ssrContext}) {
     let id = this.currentId
@@ -213,7 +225,11 @@ export default {
     },
     canDelete: {
       type: Boolean,
-      default: '',
+      default: false,
+    },
+    canEditRequest: {
+      type: Boolean,
+      default: false,
     },
     pageState: {
       type: String,
@@ -228,8 +244,12 @@ export default {
       default: false,
     },
     otherDatas: {
+      type: Object,
+    },
+    /*otherDatas: {
       type: Promise,
     },
+    */
     redirectUrl: {
       type: String,
       default: '',
@@ -250,6 +270,10 @@ export default {
       type: String,
       default: '',
     },
+    getPdfReportApi: {
+      type: String,
+      default: '',
+    },
     deleteReportApi: {
       type: String,
       default: '',
@@ -267,6 +291,10 @@ export default {
       default: '',
     },
     getModuleReportApi: {
+      type: String,
+      default: '',
+    },
+    checkSqlApi: {
       type: String,
       default: '',
     },
@@ -309,8 +337,11 @@ export default {
 
   data() {
     return {
+      loadingComponent: false,
+      isLoadingComponent: true,
       date_production: null,
       content: null,
+      content_xls: null,
       datesRange: {
         from: null,
         to: null,
@@ -370,7 +401,9 @@ export default {
       mFilter.dateReport = {}
       mFilter.table = get(reportPdf, 'report_table')
       mFilter.title = get(reportPdf, 'report_title')
-      mFilter.isChart = get(reportPdf, 'payload_query.isChart') ? true : false
+      mFilter.request_mode = get(reportPdf, 'payload_query.request_mode')
+      mFilter.request_editor = get(reportPdf, 'payload_query.request_editor')
+      mFilter.isChart = !!get(reportPdf, 'payload_query.isChart')
       mFilter.operand_date = get(reportPdf, 'payload_query.operand_date')
       mFilter.columns = get(reportPdf, 'payload_query.columns')
       mFilter.formulas = get(reportPdf, 'payload_query.formulas')
@@ -383,14 +416,25 @@ export default {
       mFilter.chart = get(reportPdf, 'payload_query.chart', {})
       mFilter.options = get(reportPdf, 'payload_query.options')
       mFilter.is_all = get(reportPdf, 'payload_query.is_all')
-      mFilter.apply_filter = get(reportPdf, 'payload_query.filterBy') ? true : false
+      mFilter.apply_filter = !!get(reportPdf, 'payload_query.filterBy')
       mFilter.filterBy = get(reportPdf, 'payload_query.filterBy')
       mFilter.isValid = true
       mFilter.app_code = get(reportPdf, 'app_code')
       mFilter.app_notice = get(reportPdf, 'app_notice')
       mFilter.options = get(reportPdf, 'payload_query.options')
 
-      console.log("mFilter", mFilter)
+      //Récupération de la date du rapport pour les conditions
+      mFilter.conditions.forEach(x =>{
+        if( (x.type === "timestamptz" || x.type === "date") &&  get(mFilter, "operand_date.code") === x.operand){
+
+          let start_date = this.datesRange.from ? moment(this.datesRange.from).format("YYYY-MM-DD") : moment(this.datesRange).format("YYYY-MM-DD")
+          let end_date = this.datesRange.to ? moment(this.datesRange.to).format("YYYY-MM-DD") : moment(this.datesRange).format("YYYY-MM-DD")
+
+          if(x.operand === "between")
+            x.value = `${start_date},${end_date}`
+        }
+      })
+
       return mFilter
     },
 
@@ -398,60 +442,27 @@ export default {
     }),
 
     //Appel des fonctions d'affichage du PDF
-    async setupPdf(payload) {
+    async setupPdf(payload, type='PDF') {
 
       this.loading = true
-      //payload.campaign = get(this.currentCampaign, 'name')
-      //payload.user_name = get(this._currentUser, 'account.employee.full_name')
-      payload.production_chain_name = get(this.productionChainUser, 'name')
-      payload.start_date = this.datesRange.from ? moment(this.datesRange.from).format("DD/MM/YYYY") : moment(this.datesRange).format("DD/MM/YYYY")
-      payload.end_date = this.datesRange.to ? moment(this.datesRange.to).format("DD/MM/YYYY") : moment(this.datesRange).format("DD/MM/YYYY")
+      if(this.content)
+        window.URL.revokeObjectURL(this.content)
 
-      payload.periode = this.getLibelleDate(payload.start_date, payload.end_date,  get(payload, "filter.operand_date.code", "between"))
-
-
-      //payload.campaign = this.currentCampaign
-
-       let dat =  await this.otherDatas.then(val => val)
-
-       payload = assign(payload, dat)
-
-      let docDefinition = RenderReport(payload)
-      const pdfDocGenerator = pdfMake.createPdf(docDefinition)
-
-      pdfDocGenerator.getBlob(async (blob) => {
-
-        if (this.content)
-          window.URL.revokeObjectURL(this.content)
-
-        const url = window.URL.createObjectURL(blob)
+      const url = window.URL.createObjectURL(payload)
+      if(type === 'PDF')
         this.content = url
-        this.dataUrl = await this.blobToBase64(blob)
+      else
+        this.content_xls = url
+      //this.dataUrl = await this.blobToBase64(payload)
+      this.loading = false
 
-        this.loading = false
-
-      })
-
-    },
-
-    downloadExcelFile(value) {
-     let content = dataGeneretor(value)
-      //console.log("content", cloneDeep(content))
-      let contentDefinition = {
-       title: content.title,
-        logo: this.logo,
-        data: get(content, 'table.table.body')
-      }
-      console.log("contentDefinition", cloneDeep(contentDefinition))
-      let tempContent =  cloneDeep(contentDefinition)
-      const exporter = new ExcelConverter(contentDefinition.title, tempContent);
-      exporter.downloadExcel();
     },
 
     //Appel des fonctions pour la génération de graphiques
     async setupChart(payload) {
 
       this.loading = true
+      console.log("payload", payload)
 
       let chartDefinition = chartGeneretor(payload)
 
@@ -460,8 +471,6 @@ export default {
         type: chartDefinition.type,
       }
 
-      console.log('chartDefinition', chartDefinition)
-      console.log('this.chartDefinition', this.chartDefinition)
     },
 
     showNotification(notification) {
@@ -475,7 +484,15 @@ export default {
     //Récupère les données du rapport provenant du backend
     async getStatsData(type = "PDF") {
       //console.log('this.filter.isValid', this.filter.isValid)
-      this.$refs.ReportForm.change()
+
+      try{
+        if(this.$refs.ReportForm)
+          this.$refs.ReportForm.change()
+      }catch (e){
+        //Le composant n'est pas encore disponible...
+        return null
+      }
+
       if (!this.filter || !this.filter.isValid) {
         //this.Motify(false, 'Veuillez remplir toutes les données')
         this.showNotification({type: false,  message: 'Veuillez remplir toutes les données'})
@@ -491,14 +508,35 @@ export default {
       }
 
       this.loading = true
+      this.filter.conditions.forEach(x =>{
+        if( (x.type === "timestamptz" || x.type === "date") &&  get(this.filter, "operand_date.code") === x.operand && !x.use_variable){
+
+          let start_date = this.datesRange.from ? moment(this.datesRange.from).format("YYYY-MM-DD") : moment(this.datesRange).format("YYYY-MM-DD")
+          let end_date = this.datesRange.to ? moment(this.datesRange.to).format("YYYY-MM-DD") : moment(this.datesRange).format("YYYY-MM-DD")
+          if(x.operand === "between"){
+            x.value = []
+            x.value.push(start_date)
+            x.value.push(end_date)
+          }
+          else
+            x.value = start_date
+        }
+
+      })
 
       //console.log(" get(this.filter, 'app_code')",  get(this.filter, 'app_code'))
+      //console.log("get(this.filter, 'request_mode')", get(this.filter, 'request_mode'))
+      let params = null
+      if(get(this.filter, 'request_mode') === "sql"){
+        this.filter.request_editor.params = this.params
+        params = this.params
+      }
+      else
+        params = omit(this.params, ['start_date', 'end_date'])
+
       let form = {
         start_date: start_date,
         end_date: end_date,
-
-        //production_chain_id: get(this.productionChainUser, "id"),
-        //campaign_id: this.currentCampaign.id,
         filter: this.filter,
         title: get(this.filter, 'title'),
         table: get(this.filter, 'table'),
@@ -506,36 +544,37 @@ export default {
         operand_date: get(this.filter, 'operand_date.code', "between"),
         app_code: get(this.filter, 'app_code', 'SERP'),
         app_notice: this.appNotice,
-        is_all: get(this.filter, 'is_all', true)
+        is_all: get(this.filter, 'is_all', true),
+        type: type === "PDF" ? 'pdf' : 'xls'
       }
-      let dat =  await this.otherDatas.then(val => val)
-      //console.log("this.otherDatas", dat)
 
-      form = assign(form, dat)
+      //console.log("this.params", this.params)
+      form = assign(form, params)
 
-      this.$store.dispatch(this.getDataReportApi, form)
-        .then(value => {
-          //console.log('value', value)
-          //console.log('this.statsData', value)
-          if(type === "PDF"){
-            if(!this.filter.isChart)
-              this.setupPdf(value)
-            else
-              this.setupChart(value)
 
-          }
-
-          else
-            this.downloadExcelFile(value)
-
-        })
-        .catch(err =>{
-
-          console.error('err', err)
-          this.showNotification({type: false,  message: 'Une erreur est survenue : Veuillez contactez votre correspondant IT'})
-        })
-        .finally(() => this.loading = false)
-
+      console.log("this.filter.isChart", this.filter.isChart)
+      if(this.filter.isChart){ //Affichage des graphes
+        this.$store.dispatch(this.getDataReportApi, form)
+          .then(value => {
+            this.setupChart(value)
+          })
+          .catch(err =>{
+            console.error('err', err)
+            this.showNotification({type: false,  message: 'Une erreur est survenue : Veuillez contactez votre correspondant IT'})
+          })
+          .finally(() => this.loading = false)
+      }
+      else {
+        this.$store.dispatch(this.getPdfReportApi, form)
+          .then(value => {
+            this.setupPdf(value, type)
+          })
+          .catch(err =>{
+            console.error('err', err)
+            this.showNotification({type: false,  message: 'Une erreur est survenue : Veuillez contactez votre correspondant IT'})
+          })
+          .finally(() => this.loading = false)
+      }
 
     },
 
@@ -648,6 +687,15 @@ export default {
       }
       return libelle
 
+    },
+
+    async prefetchData(){
+      if (this.pageState === 'view') {
+        await this.$store.dispatch(this.viewReportApi, {id: this.currentId}).then(value => {
+          this.filter = this.generateFilter(value)
+        })
+        await this.getStatsData('PDF')
+      }
     }
 
   },
@@ -696,9 +744,33 @@ export default {
       }
       return 'Selectionner une date'
     },
+
+    params(){
+      let dat =   this.otherDatas
+
+
+      let start_date = this.datesRange.from ? moment(this.datesRange.from).format( 'YYYY-MM-DD') : moment(this.datesRange).format( 'YYYY-MM-DD')
+      let end_date = this.datesRange.to ?  moment(this.datesRange.to).format( 'YYYY-MM-DD') : moment(this.datesRange).format('YYYY-MM-DD')
+
+      if(start_date !== end_date &&  get(this.filter, 'operand_date.code', "between") !== "between"){
+        this.showNotification({type: false,  message: "Changez le type de filtre à Entre ou choissiez une date unique"})
+        return null
+      }
+
+      dat.start_date = `'${start_date}'`
+      dat.end_date = `'${end_date}'`
+      //console.log("dat",dat)
+      return dat
+    }
   },
 
   async mounted() {
+
+
+    //chargement du Module report
+    this.loadingComponent = true
+    //this.loading = true
+    //loadReportGenerator().finally(() => this.loading = false)
 
     if( get(this.currentReport, "payload_query.operand_date.code", "between") === 'between'){
       let dateRange = this.getMonthDateRange(new Date())
@@ -709,17 +781,25 @@ export default {
       this.datesRange = moment().format("YYYY-MM-DD")
     }
 
-    if (this.pageState === 'view') {
-      await this.$store.dispatch(this.viewReportApi, {id: this.currentId}).then(value => {
-        this.filter = this.generateFilter(value)
-      })
-      await this.getStatsData('PDF')
-    }
+    //console.log("pageState", this.pageState)
+    //this.prefetchData()
   },
 
   beforeDestroy() {
     if (this.content)
       window.URL.revokeObjectURL(this.content)
+  },
+
+  watch: {
+    'pageState': {
+      handler: async function (val, oldVal){
+        if(val) {
+          this.prefetchData()
+        }
+      },
+      deep: true,
+      immediate: true,
+    },
   }
 }
 </script>

@@ -6,15 +6,15 @@
 
       <div class="row no-wrap q-pa-md">
         <div class="col-md-6">
-          <q-input  class="q-mr-md" dense label="Label axe X *" v-model="newFilter.chart.xaxisname"
-                    @m-blur="validator.newFilter.chart.xaxisname.$touch"
-                    :error="validator.newFilter.chart.xaxisname.$error"
+          <q-input  class="q-mr-md" dense label="Label axe X *" v-model="newFilter?.chart.xaxisname"
+                    @m-blur="validator.newFilter?.chart.xaxisname.$touch"
+                    :error="validator.newFilter?.chart.xaxisname.$error"
           />
         </div>
         <div class="col-md-6">
           <q-input  class="q-mr-md" dense label="Label axe Y *" v-model="newFilter.chart.yaxisname"
-                    @m-blur="validator.newFilter.chart.yaxisname.$touch"
-                    :error="validator.newFilter.chart.yaxisname.$error"
+                    @m-blur="validator.newFilter?.chart.yaxisname.$touch"
+                    :error="validator.newFilter?.chart.yaxisname.$error"
           />
         </div>
       </div>
@@ -199,13 +199,9 @@
 <script>
 
 import get from "lodash/get";
-import clone from 'lodash/cloneDeep'
 
 export default {
   name: 'TabChart',
-  components: {
-    ColumnReport: () => import('./ColumnReport'),
-  },
   model: {
     prop: 'value',
     event: 'input',
@@ -221,7 +217,6 @@ export default {
       type: [Array, Object],
       default: ()=> {},
     },
-
     columns: {
       type: [Array, Object],
       default: ()=>[],
@@ -275,6 +270,10 @@ export default {
           code: "pareto2d",
         },
         {
+          name: "Batonnet horizontal",
+          code: "bar2d",
+        },
+        {
           name: "Batonnet 3d",
           code: "column3d",
         },
@@ -301,6 +300,18 @@ export default {
           code: "mscolumn2d",
         },
         {
+          name: "Batonnet multisérie (scroll)",
+          code: "scrollcolumn2d",
+        },
+        {
+          name: "Batonnet multisérie",
+          code: "mscolumn2d",
+        },
+        {
+          name: "Batonnet horizontal multisérie (scroll)",
+          code: "msbar2d",
+        },
+        {
           name: "Multi ligne",
           code: "msline",
         },
@@ -311,6 +322,10 @@ export default {
         {
           name: "Aires multisérie",
           code: "msarea",
+        },
+        {
+          name: "Batonnet empilé",
+          code: "stackedcolumn2dline",
         },
 
       ],
@@ -411,12 +426,21 @@ export default {
 
   async mounted() {
 
-    this.chartTypeOptions = this.chartSimpleType
-    this.mChartType = this.newFilter.chart.chartType
-    this.mChartComplexity = this.newFilter.chart.chartComplexity
-    this.mCategory= this.newFilter.chart.category
-    this.mSeries= this.newFilter.chart.series
-    this.mValues = this.newFilter.chart.valuesSeries
+    this.chartTypeOptions = []
+
+    /*if(this.newFilter.chart.chartComplexity && this.newFilter.chart.chartComplexity.name === "simple")
+      this.chartTypeOptions = this.chartSimpleType
+    else if(this.newFilter.chart.chartComplexity && this.newFilter.chart.chartComplexity.name === "complex")
+      this.chartTypeOptions = this.chartComplexType*/
+
+    if(!this.newFilter.chart)
+      this.newFilter.chart = {}
+
+    this.mChartType = get(this.newFilter, "chart.chartType")
+    this.mChartComplexity = get(this.newFilter, "chart.chartComplexity")
+    this.mCategory= get(this.newFilter, "chart.category")
+    this.mSeries= get(this.newFilter, "chart.series")
+    this.mValues = get(this.newFilter, "chart.valuesSeries")
 
 
   },

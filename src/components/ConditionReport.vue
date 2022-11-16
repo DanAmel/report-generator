@@ -109,6 +109,7 @@
 
 <script>
 import get from "lodash/get";
+import orderBy from "lodash/orderBy"
 
 export default {
   name: "ConditionReport",
@@ -181,7 +182,7 @@ export default {
     filterAvailableColumns (val, update, abort) {
       update(() => {
         const needle = val.toLowerCase()
-        this.availableFilterColumns = this.availableColumns.filter(v => v.name.toLowerCase().indexOf(needle) > -1)
+        this.availableFilterColumns = orderBy(this.availableColumns.filter(v => v.name.toLowerCase().indexOf(needle) > -1), 'name', 'ASC')
       })
     },
 
