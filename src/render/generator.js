@@ -1,4 +1,3 @@
-import ReportTemplate from './template'
 import separatorNumber from "src/plugins/separatorNumber";
 import get from 'lodash/get'
 import moment from 'moment-timezone'
@@ -72,7 +71,7 @@ function getContent(dataRows, columnList, isGrouped = false, counterKey=0, acc= 
     let result = []
     columnList.forEach((x, index) =>{
       if(index === 0)
-        result.push({text: `AUCUN RESULTAT`, style: ['element'], border:[1,1,1,1], bold: true, colSpan:columnList.length})
+        result.push({text: `AUCUN RESULTAT`, style: ['element'], border:[1,1,1,1], bold: true, colSpan: (columnList.length+ formulas.length)})
       else
         result.push({})
     })
@@ -286,8 +285,8 @@ function formatData(data, column){
       //value = moment(data).isValid() ? moment(data).tz(moment.tz.guess()).format('YYYY-MM-DD') : 'N/A'
       break
     case 'timestamptz':
-      value = moment(data).isValid() ? moment(data).tz(moment.tz.guess()).format('DD/MM/YYYY'): 'N/A'
-      //value = moment(data).isValid() ? moment(data).tz(moment.tz.guess()).format('YYYY-MM-DD HH:mm:ss'): 'N/A'
+      //value = moment(data).isValid() ? moment(data).tz(moment.tz.guess()).format('DD/MM/YYYY'): 'N/A'
+      value = moment(data).isValid() ? moment(data).tz(moment.tz.guess()).format('DD/MM/YYYY HH:mm:ss'): 'N/A'
       break
     case 'interval':
       if(data && data.hours)

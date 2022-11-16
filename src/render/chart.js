@@ -12,6 +12,73 @@ import {Parser} from 'expr-eval'
 import _filter from "lodash/filter"
 import _sumBy from "lodash/sumBy"
 
+function formatData(data, column){
+
+  let type = ''
+  if(typeof column === 'object')
+    type = get(column, 'type', 'varchar')
+  else
+    type = column
+
+  let value = ''
+  switch (type){
+    case 'float8':
+    case 'float4':
+    case 'numeric':
+    case 'int4':
+    case 'int8':
+    case 'int':
+      value = data ? separatorNumber(_round(parseFloat(data), 5)) : 0
+      break
+    case 'date':
+      value = moment(data).isValid() ? moment(data).tz(moment.tz.guess()).format('DD-MM-YYYY') : 'N/A'
+      //value = moment(data).isValid() ? moment(data).tz(moment.tz.guess()).format('YYYY-MM-DD') : 'N/A'
+      break
+    case 'timestamptz':
+      value = moment(data).isValid() ? moment(data).tz(moment.tz.guess()).format('DD/MM/YYYY'): 'N/A'
+      //value = moment(data).isValid() ? moment(data).tz(moment.tz.guess()).format('YYYY-MM-DD HH:mm:ss'): 'N/A'
+      break
+    case 'interval':
+      if(data && data.hours)
+        value += `${data.hours}H`
+      if (data && data.minutes)
+        value += ` ${data.minutes} min`
+      break
+    case 'bool':
+      data = data ? 'true' : 'false'
+      break
+    default:
+      value = (!!data && data !== 'null')  ? data : 'N/A'
+      break
+  }
+
+  if(column.data && Array.isArray(column.data) && column.data.length > 0){
+    let elmt = column.data.find(x => x.code === data)
+    if(elmt)
+      value = get(elmt, 'name')
+  }
+
+  return value
+}
+
+function isNumeric(column){
+  let type = get(column, 'type', 'varchar')
+  let value = false
+  switch (type){
+    case 'float4':
+    case 'float8':
+    case 'numeric':
+    case 'int8':
+    case 'int4':
+      value = true
+      break
+    default:
+      value = false
+      break
+  }
+  return value
+
+}
 
 function getDataSource(payload, complexity, chartType, category, series, valuesSeries, options){
 
@@ -26,7 +93,6 @@ function getDataSource(payload, complexity, chartType, category, series, valuesS
       break;
     case "complex":
       categories = getCategoriesFC(payload, category)
-      console.log("categories", categories)
       dataset = getDatasetFC(payload, category.code, categories, series, valuesSeries)
       dataSource = getComplexDataSourceFC(categories, dataset, options)
       break;
@@ -38,13 +104,12 @@ function getDataSource(payload, complexity, chartType, category, series, valuesS
   return dataSource
 }
 
-
 function getSimpleDataFC(payload, category, serie){
   let temp = []
   let code_serie = serie.code
   let groupData = _groupBy(payload, category.code)
   let keys = Object.keys(groupData)
-  keys.forEach(x => temp.push({label: x, value: _sumBy(groupData[x], code_serie)}) )
+  keys.forEach(x => temp.push({label: formatData(x,category), value: _sumBy(groupData[x], code_serie)}) )
   let data = _orderBy(temp, 'value', "desc")
 
   return data
@@ -75,10 +140,9 @@ function getCategoriesFC(payload, category){
   let temp = []
   let code_category = category.code
   let categories = []
-  console.log('code_category', code_category)
   let groupData = _groupBy(payload, category.code)
   let keys = Object.keys(groupData)
-  keys.forEach(x => temp.push({label: x}) )
+  keys.forEach(x => temp.push({label: formatData(x,category)}) )
   categories.push({ category: temp})
   return categories
 }
@@ -101,20 +165,21 @@ function getDatasetFC(payload, category_code, categories, series, valuesSeries=n
 
         //On ordonne
         if(index === 0)
-          temp.push({label: value.label, value: val})
+          temp.push({label: formatData(value.label, serie), value: val})
       })
 
       //On ordonne les categories et datas
       if(index === 0){
         temp = _orderBy(temp, "value", "desc")
         category_values = []
-        temp.forEach(x => category_values.push({label: x.label}))
+        temp.forEach(x => category_values.push({label: formatData(x.label, serie)}))
         categories[0].category = category_values
         data = _orderBy(data, 'value', "desc")
       }
 
+      let seriename = serie.alias ? serie.alias : serie.name
       dataset.push({
-        seriesname: serie.alias ? serie.alias : serie.name,
+        seriesname: formatData(seriename, serie) ,
         data
       })
 
@@ -143,16 +208,15 @@ function getDatasetFC(payload, category_code, categories, series, valuesSeries=n
         })
 
         dataset.push({
-          seriesname: key,
+          seriesname: formatData(key, serie) ,
           data
         })
       })
 
     })
   }
-  console.log("dataset", dataset)
+  //console.log("dataset", dataset)
   return dataset
-
 }
 
 
