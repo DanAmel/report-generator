@@ -1,6 +1,6 @@
 {
   "name": "@sfp-group/pdf-report-generator",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "description": "Generator Reports",
   "productName": "Generator Report",
   "author": "Daniel AMELINA <daniel.amelina@benincontrol.com>",
@@ -13,6 +13,7 @@
     "@quasar/extras": "^1.0.0",
     "lodash": "^4.17.11",
     "moment": "^2.29.1",
+    "moment-timezone": "^0.5.40",
     "vue-i18n": "^8.0.0",
     "vue-instant-pdf-viewer": "^1.0.2",
     "vuelidate": "^0.7.6",
