@@ -263,39 +263,39 @@ export default {
       default: 'secondary',
     },
     viewReportApi: {
-      type: String,
+      type: [String, Function],
       default: '',
     },
     getDataReportApi: {
-      type: String,
+      type: [String, Function],
       default: '',
     },
     getPdfReportApi: {
-      type: String,
+      type: [String, Function],
       default: '',
     },
     deleteReportApi: {
-      type: String,
+      type: [String, Function],
       default: '',
     },
     validateReportApi: {
-      type: String,
+      type: [String, Function],
       default: '',
     },
     createReportApi: {
-      type: String,
+      type: [String, Function],
       default: '',
     },
     updateReportApi: {
-      type: String,
+      type: [String, Function],
       default: '',
     },
     getModuleReportApi: {
-      type: String,
+      type: [String, Function],
       default: '',
     },
     checkSqlApi: {
-      type: String,
+      type: [String, Function],
       default: '',
     },
     returnUrl: {
@@ -386,9 +386,15 @@ export default {
 
     //Fonction qui recharge la page
     async reloadPage(id) {
-      await this.$store.dispatch(this.viewReportApi, {id}).then(value => {
-        this.filter = this.generateFilter(value)
-      })
+
+      let promise
+      if(typeof this.viewReportApi === 'string')
+        promise = this.$store.dispatch(this.viewReportApi, {id})
+      else
+        promise = this.viewReportApi({id})
+
+      await promise.then(value => { this.filter = this.generateFilter(value) })
+
 
     },
 
@@ -554,7 +560,13 @@ export default {
 
       //console.log("this.filter.isChart", this.filter.isChart)
       if(this.filter.isChart){ //Affichage des graphes
-        this.$store.dispatch(this.getDataReportApi, form)
+        let promise
+        if(typeof this.getDataReportApi === "string")
+          promise = this.$store.dispatch(this.getDataReportApi, form)
+        else
+          promise = this.getDataReportApi(form)
+
+        promise
           .then(value => {
             this.setupChart(value)
           })
@@ -565,7 +577,13 @@ export default {
           .finally(() => this.loading = false)
       }
       else {
-        this.$store.dispatch(this.getPdfReportApi, form)
+        let promise
+        if(typeof this.getPdfReportApi === "string")
+          promise = this.$store.dispatch(this.getPdfReportApi, form)
+        else
+          promise = this.getPdfReportApi(form)
+
+        promise
           .then(value => {
             this.setupPdf(value, type)
           })
@@ -608,7 +626,14 @@ export default {
         cancel: true,
         persistent: false
       }).onOk(async () => {
-        let result =  await this.$store.dispatch(this.deleteReportApi, {id: this.currentId})
+        let result
+
+        if(typeof this.deleteReportApi === "string")
+          result = this.$store.dispatch(this.deleteReportApi, {id: this.currentId})
+        else
+          result = this.deleteReportApi({id: this.currentId})
+
+        await result
           .then(async (value) => {
             //this.Motify('success', "Le rapport a bien été supprimé", '/generate/reports')
             this.showNotification({type: true,  message: "Le rapport a bien été supprimé",  path: "/apps/statistics/reports-list"})
@@ -638,10 +663,21 @@ export default {
           cancel: true,
           persistent: false
         }).onOk(async () => {
-          await this.$store.dispatch(this.validateReportApi, {id: this.currentId, status: status})
+          let promise
+          if(typeof this.validateReportApi === "string")
+            promise = this.$store.dispatch(this.validateReportApi, {id: this.currentId, status: status})
+          else
+            promise = this.validateReportApi({id: this.currentId, status: status})
+          await promise
               .then(async (value) => {
                 //On actualise le rapport
-                await this.$store.dispatch(this.viewReportApi, {id: value.data.id})
+                let promise2
+                if(typeof this.viewReportApi === "string")
+                  promise2 = this.$store.dispatch(this.viewReportApi, {id: value.data.id})
+                else
+                  promise2 = this.viewReportApi({id: value.data.id})
+
+                await promise2
                 //this.Motify('success', "Opération réussie")
                 this.showNotification({type: true,  message: "Opération réussie", path: null, query: null}, )
               })
@@ -691,7 +727,13 @@ export default {
 
     async prefetchData(){
       if (this.pageState === 'view') {
-        await this.$store.dispatch(this.viewReportApi, {id: this.currentId}).then(value => {
+        let promise
+        if(typeof this.viewReportApi === "string")
+          promise = this.$store.dispatch(this.viewReportApi, {id: this.currentId})
+        else
+          promise = this.viewReportApi({id: this.currentId})
+
+        await promise.then(value => {
           this.filter = this.generateFilter(value)
         })
         await this.getStatsData('PDF')

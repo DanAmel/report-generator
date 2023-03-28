@@ -344,19 +344,19 @@ export default {
       default: 'primary',
     },
     createReportApi: {
-      type: String,
+      type: [String, Function],
       default: '',
     },
     updateReportApi: {
-      type: String,
+      type: [String, Function],
       default: '',
     },
     getModuleReportApi: {
-      type: String,
+      type: [String, Function],
       default: '',
     },
     checkSqlApi: {
-      type: String,
+      type: [String, Function],
       default: '',
     },
     canCreate: {
@@ -909,7 +909,13 @@ export default {
       this.hide()
       //console.log("payload",  payload.id ? this.createReportApi: this.updateReportApi)
       this.dialog = false
-      await this.$store.dispatch(promise, payload).then(async (res) => {
+      let execute
+      if(typeof promise === "string")
+        execute = this.$store.dispatch(promise, payload)
+      else
+        execute = promise(payload)
+
+      await execute.then(async (res) => {
 
         //await this.reloadPage(res.data.id)
 

@@ -180,7 +180,7 @@ export default {
       default: '',
     },
     checkSqlApi: {
-      type: String,
+      type: [String, Function],
       default: '',
     },
     requestParams: {
@@ -290,7 +290,12 @@ export default {
         request: this.code,
       }
       this.loading = true
-      await this.$store.dispatch(this.checkSqlApi, payload).then(async (res) =>{
+      let promise
+      if(typeof this.checkSqlApi === "string")
+        promise = this.$store.dispatch(this.checkSqlApi, payload)
+      else
+        promise = this.checkSqlApi(payload)
+      await promise.then(async (res) =>{
 
         this.setBackendVariables(get(res, "data.columns"))
 
