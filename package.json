@@ -1,6 +1,6 @@
 {
   "name": "@sfp-group/pdf-report-generator",
-  "version": "1.9.1",
+  "version": "1.9.4",
   "description": "Generator Reports",
   "productName": "Generator Report",
   "author": "Daniel AMELINA <daniel.amelina@benincontrol.com>",

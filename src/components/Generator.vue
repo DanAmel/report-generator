@@ -157,7 +157,6 @@
 
 <script>
 
-import {mapActions, mapState} from "vuex";
 import get from "lodash/get";
 import omit from "lodash/omit"
 import assign from "lodash/assign"
@@ -444,8 +443,6 @@ export default {
       return mFilter
     },
 
-    ...mapActions({
-    }),
 
     //Appel des fonctions d'affichage du PDF
     async setupPdf(payload, type='PDF') {
@@ -752,12 +749,6 @@ export default {
      return this.currentReport && get(this.currentReport, 'status') === 'validated'
     },
 
-    ...mapState({
-      productionChainUser: state => get(state, 'productionChainUser.item'),
-      statsData: state => get(state, 'reports.dataReport'),
-      currentCampaign: state => get(state, 'campaign.item'),
-      currentUser: state => get(state, 'authentification.user'),
-    }),
 
     selectedDates() {
       if (!!this.datesRange) {

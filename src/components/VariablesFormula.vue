@@ -44,7 +44,6 @@
 </template>
 
 <script>
-import {mapActions, mapState} from 'vuex'
 import {required} from 'vuelidate/lib/validators'
 
 export default {
@@ -145,8 +144,6 @@ export default {
       return Promise.resolve(data)
     },
 
-    ...mapActions({
-    }),
 
     setForm() {
       this.form.variables = this.variables.map(x => {
@@ -168,8 +165,7 @@ export default {
   },
 
   computed: {
-    ...mapState({
-    }),
+
   },
 
   watch: {

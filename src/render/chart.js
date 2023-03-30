@@ -1,5 +1,5 @@
 import ReportTemplate from './template'
-import separatorNumber from "src/plugins/separatorNumber";
+import separatorNumber from "../plugins/separatorNumber";
 import get from 'lodash/get'
 import _orderBy from "lodash/orderBy"
 import moment from 'moment-timezone'

@@ -284,7 +284,6 @@
 import get from "lodash/get";
 import orderBy from "lodash/orderBy"
 import clone from 'lodash/cloneDeep'
-import {mapActions, mapState} from "vuex";
 import {required, requiredIf} from 'vuelidate/lib/validators'
 import {Parser} from 'expr-eval'
 import SQLConfig from "./SQLConfig";
@@ -942,7 +941,6 @@ export default {
     },
 
     //FONCTION DEPART
-    ...mapActions({}),
 
     //Fonction qui transforme la donnée en objet exploitable par le générateur
     async mapForm() {
@@ -1094,11 +1092,6 @@ export default {
 
   computed: {
 
-    ...mapState({
-      //reportList: state => get(state, `${this.reportState}.moduleList`),
-      //dataReport: state => get(state, `${this.dataReportState}.dataReport`),
-      //productionChainUser: state => state.productionChainUser.item,
-    }),
 
     isRequestMode() {
       return this.request_mode && this.request_mode.code !== "view"

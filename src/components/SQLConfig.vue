@@ -155,7 +155,6 @@
 </template>
 
 <script>
-import {mapActions, mapState} from 'vuex'
 import {required} from 'vuelidate/lib/validators'
 import get from "lodash/get";
 import _clone from 'lodash/cloneDeep'
@@ -366,8 +365,6 @@ export default {
 
     },
 
-    ...mapActions({
-    }),
 
     setForm() {
 
@@ -375,8 +372,7 @@ export default {
   },
 
   computed: {
-    ...mapState({
-    }),
+
   },
 
   watch: {
