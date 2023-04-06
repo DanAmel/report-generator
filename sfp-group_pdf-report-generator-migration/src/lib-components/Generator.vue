@@ -162,13 +162,14 @@ import omit from "lodash/omit"
 import assign from "lodash/assign"
 import moment from "moment";
 
-import chartGeneretor from "src/render/chart"
-import myLoadingComponent from "src/components/loading"
-import myErrorComponent from "src/components/error"
+import chartGeneretor from "./render/chart"
+import myLoadingComponent from "./loading"
+import myErrorComponent from "./error"
+
 
 const ReportForm = () => ({
   // The component to load (should be a Promise)
-  component: import('src/components/ReportForm'),
+  component: import('./ReportForm'),
   // A component to use while the async component is loading
   loading: myLoadingComponent,
   // A component to use if the load fails
@@ -180,7 +181,6 @@ const ReportForm = () => ({
   timeout: 1000 * 60 * 3
 })
 
-
 export default {
 
   name: "GeneratorIndex",
@@ -188,7 +188,9 @@ export default {
   components: {
     //ReportForm: () => import('./ReportForm'),
     ReportForm,
-    FuseChart: () => import('src/components/FuseChart')
+    FuseChart: () => import('./FuseChart'),
+    QPage, QToolbar, QToolbarTitle, QBreadcrumbs, QBreadcrumbsEl, QBtn, QSelect, QItem, QItemSection, QCheckbox, QIcon, QInput, QTooltip, QDate,
+    QPopupProxy
   },
 
   async preFetch({store, currentRoute, previousRoute, redirect, ssrContext}) {

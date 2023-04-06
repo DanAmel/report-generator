@@ -286,7 +286,7 @@ import orderBy from "lodash/orderBy"
 import clone from 'lodash/cloneDeep'
 import {required, requiredIf} from 'vuelidate/lib/validators'
 import {Parser} from 'expr-eval'
-import SQLConfig from "src/components/SQLConfig";
+import SQLConfig from "./SQLConfig";
 
 const expression = (value) => {
   try {

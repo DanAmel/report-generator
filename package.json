@@ -1,24 +1,31 @@
 {
-  "name": "@sfp-group/pdf-report-generator",
-  "version": "1.9.4",
+  "name": "@sfp-group/pdf-report-generator-migration",
+  "version": "0.0.1",
   "description": "Generator Reports",
   "productName": "Generator Report",
   "author": "Daniel AMELINA <daniel.amelina@benincontrol.com>",
+  "type":"module",
+  "main": "dist/library.js",
+  "module": "dist/library.mjs",
+  "files": [
+    "dist/*"
+  ],
   "scripts": {
     "lint": "eslint --ext .js,.vue ./",
     "format": "prettier --write \"**/*.{js,vue,css,html,md,json}\" --ignore-path .gitignore",
-    "test": "echo \"No test specified\" && exit 0"
+    "test": "echo \"No test specified\" && exit 0",
+    "build": "rollup -c"
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
+    "expr-eval": "^2.0.2",
     "lodash": "^4.17.11",
     "moment": "^2.29.1",
     "moment-timezone": "^0.5.40",
+    "simple-code-editor": "^1.2.2",
     "vue-i18n": "^8.0.0",
     "vue-instant-pdf-viewer": "^1.0.2",
-    "vuelidate": "^0.7.6",
-    "expr-eval": "^2.0.2",
-    "simple-code-editor": "^1.2.2"
+    "vuelidate": "^0.7.6"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.13.14",
@@ -27,7 +34,10 @@
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-vue": "^7.0.0",
     "eslint-webpack-plugin": "^2.4.0",
-    "prettier": "^2.5.1"
+    "prettier": "^2.5.1",
+    "rollup": "^3.20.2",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "rollup-plugin-vue": "^6.0.0"
   },
   "browserslist": [
     "last 10 Chrome versions",
@@ -45,7 +55,6 @@
     "npm": ">= 6.13.4",
     "yarn": ">= 1.21.1"
   },
-  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/DanAmel/report-generator.git"

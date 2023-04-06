@@ -41,7 +41,7 @@
 
 import get from "lodash/get";
 import {Parser} from 'expr-eval'
-import VariablesFormulaDialog from "src/components/VariablesFormula";
+import VariablesFormulaDialog from "./VariablesFormula";
 
 export default {
   name: "FormulaReport",
